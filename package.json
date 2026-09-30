@@ -1,7 +1,7 @@
 {
   "name": "qiaomu-rss-dsh",
   "description": "Qiaomu RSS reader for dsh: featured + personal feeds, AI translation/rewrite assist, agent tools, and a web reading panel",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "license": "GPL-3.0-only",
   "repository": {
@@ -12,12 +12,15 @@
     "deepseek-harness",
     "dsh-plugin",
     "rss",
-    "qiaomu"
+    "qiaomu",
+    "reading"
   ],
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node tests/smoke.mjs && node tests/article-context.mjs && node tests/video.mjs && node tests/reading-version.mjs && node tests/render.mjs && node tests/harness-integration.mjs && node tests/companion-draft.mjs"
+    "test": "node tests/smoke.mjs && node tests/article-context.mjs && node tests/video.mjs && node tests/reading-version.mjs && node tests/render.mjs && node tests/harness-integration.mjs && node tests/companion-draft.mjs",
+    "prepack": "npm run build && node scripts/verify-package.mjs",
+    "check": "npm run build && npm test && node scripts/verify-package.mjs"
   },
   "main": "lib/index.js",
   "exports": {
@@ -91,5 +94,9 @@
     "lucide-react": "^1.49.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
+  },
+  "homepage": "https://github.com/joeseesun/qiaomu-rss-dsh#readme",
+  "bugs": {
+    "url": "https://github.com/joeseesun/qiaomu-rss-dsh/issues"
   }
 }
