@@ -16,5 +16,6 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm test
+      - run: node scripts/verify-package.mjs
       - name: Confirm bundled files are current
         run: git diff --exit-code -- lib/
