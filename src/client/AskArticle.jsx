@@ -4,7 +4,7 @@ import { Icon } from './icons.jsx';
 import { readQuickPrompts } from './quick-prompts.js';
 
 /** Reader on the left; Harness's own conversation stays mounted on the right. */
-export function AskArticle({ api, context, onClose, SessionProvider, renderSlot }) {
+export function AskArticle({ api, context, onClose, onManagePrompts, SessionProvider, renderSlot }) {
   const [workspaceId, setWorkspaceId] = useState(() => api.defaultChatWorkspace?.());
   const [chat, setChat] = useState(null);
   const [error, setError] = useState('');
@@ -135,8 +135,9 @@ export function AskArticle({ api, context, onClose, SessionProvider, renderSlot 
     {chat && attached === contextKey && SessionProvider && <div className="qrs-native-chat" ref={chatRoot}>
       <SessionProvider session={chat.reference}>{renderSlot('qiaomu-rss.chat', {})}</SessionProvider>
     </div>}
-    {promptMount && prompts.length > 0 && createPortal(<div className="qrs-companion-prompt-strip" role="group" aria-label="快捷提示词">
-      {prompts.map(item => <button type="button" key={item.id} title={item.body} aria-label={`直接发送：${item.title}`} disabled={sendingPrompt} onClick={() => void sendQuickPrompt(item)}>{item.title}</button>)}
+    {promptMount && createPortal(<div className="qrs-companion-prompt-strip" role="group" aria-label="快捷提示词">
+      <div className="qrs-companion-prompt-scroll">{prompts.map(item => <button type="button" key={item.id} title={item.body} aria-label={`直接发送：${item.title}`} disabled={sendingPrompt} onClick={() => void sendQuickPrompt(item)}>{item.title}</button>)}</div>
+      <button type="button" className="qrs-companion-add-prompt" aria-label="新增快捷提示词" title="新增快捷提示词" onClick={onManagePrompts}><Icon name="plus" size={14} /></button>
     </div>, promptMount)}
   </aside>;
 }

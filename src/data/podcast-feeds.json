@@ -1,0 +1,443 @@
+{
+  "source": "https://github.com/joeseesun/qiaomu-ai-rss/blob/main/src/data/tidings.json",
+  "items": [
+    {
+      "name": "30 for 30 Podcasts",
+      "url": "https://feeds.megaphone.fm/ESP5765452710",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "42章经 — Podcast",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/648b0b641c48983391a63f98",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "AI炼金术 — Podcast",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/63e9ef4de99bdef7d39944c8",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "Darknet Diaries",
+      "url": "https://feeds.megaphone.fm/darknetdiaries",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "Discovery",
+      "url": "https://podcasts.files.bbci.co.uk/p002w557.rss",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "Fragmented - AI Developer Podcast",
+      "url": "https://feeds.simplecast.com/LpAGSLnY",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "Gastropod",
+      "url": "https://www.omnycontent.com/d/playlist/aaea4e69-af51-495e-afc9-a9760146922b/2a195077-f014-41d2-8313-ab190186b4c2/277bcd5c-0a05-4c14-8ba6-ab190186b4d5/podcast.rss",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "Hacking Humans",
+      "url": "https://feeds.megaphone.fm/hacking-humans",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "Hanselminutes with Scott Hanselman",
+      "url": "https://feeds.simplecast.com/gvtxUiIf",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "Invest Like the Best with Patrick O'Shaughnessy",
+      "url": "https://investlikethebest.libsyn.com/rss",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "Invisibilia",
+      "url": "https://feeds.npr.org/510307/podcast.xml",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "Planet Money",
+      "url": "https://feeds.npr.org/510289/podcast.xml",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "Reply All",
+      "url": "https://feeds.megaphone.fm/replyall",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "The Cynical Developer",
+      "url": "https://cynicaldeveloper.com/feed/podcast",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "The Startup Junkies Podcast",
+      "url": "https://startupjunkie.libsyn.com/rss",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "The Vergecast",
+      "url": "https://feeds.megaphone.fm/vergecast",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "Throughline",
+      "url": "https://feeds.npr.org/510333/podcast.xml",
+      "description": "播客节目",
+      "language": "en"
+    },
+    {
+      "name": "TIANYU2FM — 对谈未知领域",
+      "url": "https://rsshub.xiaowuaiblog.com/xiaoyuzhou/podcast/5f22729f9504bbdb77253e46",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "What's Next｜科技早知道",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e74b52c418a84a046ecaceb",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "一席",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e285326418a84a04627343f",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "三五环",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e280fab418a84a0461faa3c",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "不合时宜",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e280fb8418a84a0461fd076",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "东亚观察局",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e9a4e25418a84a046bc6156",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "东腔西调",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5f72b66083c34e85dd14fde9",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "乱翻书",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/61358d971c5d56efe5bcb5d2",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "人民公园说AI",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/65257ff6e8ce9deaf70a65e9",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "保持偏见",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/663e3c95af1e22bb157dcee3",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "信号与噪声",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/6819d5a7e37664602a344e0e",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "凹凸电波",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e2839ca418a84a0462431b7",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "十字路口Crossing — Podcast",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/60502e253c92d4f62c2a9577",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "半拿铁 | 商业沉浮录",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/62382c1103bea1ebfffa1c00",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "卫诗婕｜漫谈Light the Star",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/6627fda4b56459544087d86a",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "商业就是这样",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/6022a180ef5fdaddc30bb101",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "声东击西",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e2831ed418a84a046231c00",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "声动早咖啡",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/60de7c003dd577b40d5a40f3",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "天真不天真",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/65cef9e3cace72dff8d98de3",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "屠龙之术",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/6507bc165c88d2412626b401",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "岩中花述",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/625635587bfca4e73e990703",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "开始连接 LinkStart",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/63ff0da51b1faf8a0b70b337",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "张小珺Jùn｜商业访谈录",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/626b46ea9cbbf0451cf5a962",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "忽左忽右",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e4ee557418a84a0466737b7",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "慢速生长",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/668d00c38fcadceb90158ac1",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "捕蛇者说",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e2864f7418a84a04628f2da",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "搞钱女孩",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/63d945ece725b5378a158d29",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "文化有限",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e4515bd418a84a046e2b11a",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "晚点聊 LateTalk",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/61933ace1b4320461e91fd55",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "李诞",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/65bb55f6513a776b57dedb32",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "枫言枫语 — Podcast",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e2864f5418a84a04628e249",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "此话当真",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/646f194853a5e5ea1408d97c",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "游荡集",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/6163ca67c8c1d14e83366b31",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "牛油果烤面包",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e7c8b2b418a84a046e3ecbc",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "独树不成林",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/64acd33c7a3d479103fbd32d",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "疯投圈",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e280faf418a84a0461fbd39",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "皮蛋漫游记",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/6281264ad22bcf3950c80b56",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "看理想圆桌",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e4ff4c7418a84a046977618",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "知行小酒馆",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/6013f9f58e2f7ee375cf4216",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "硅谷101 — Podcast",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e5c52c9418a84a04625e6cc",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "硬地骇客",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/640ee2438be5d40013fe4a87",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "科技乱炖",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e4243cd418a84a0469573fb",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "第一财经",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/64c75555e8176c3ff81de98c",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "纵横四海",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/62694abdb221dd5908417d1e",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "罗永浩的十字路口",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/68981df29e7bcd326eb91d88",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "肥话连篇",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/61d50d72ee197a3aac3dac42",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "自习室 STUDY ROOM",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/65a5fb7540d4ef949c0140ac",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "自我进化论",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e5de5cb418a84a0467beb90",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "蒋方舟·一寸",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/67c7eeb07ac3e30992e75a2f",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "诗梳风",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/696496f4db4738160d5fabde",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "谭立人",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/65a2d0f07242f9fc1c1df60a",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "起朱楼宴宾客",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/61dd99a47b29652ff572257b",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "跨国串门儿计划",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/670f3da40d2f24f28978736f",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "随机波动StochasticVolatility",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/5e7cc741418a84a046b0c2bd",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "面基",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/6388760f22567e8ea6ad070f",
+      "description": "播客节目",
+      "language": "zh"
+    },
+    {
+      "name": "高能量",
+      "url": "https://rsshub.bestblogs.dev/xiaoyuzhou/podcast/62c6ae08c4eaa82b112b9c84",
+      "description": "播客节目",
+      "language": "zh"
+    }
+  ]
+}

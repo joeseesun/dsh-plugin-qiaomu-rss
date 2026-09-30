@@ -33,6 +33,7 @@
     "README.md",
     "vendor",
     "src/data/independent-blogs.json",
+    "src/data/podcast-feeds.json",
     "cordis.patch.yml",
     "lib"
   ],

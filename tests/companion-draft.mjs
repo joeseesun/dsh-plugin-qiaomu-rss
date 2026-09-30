@@ -22,6 +22,7 @@ const tick = () => new Promise(resolveTick => setTimeout(resolveTick, 20));
 const inserted = [];
 const sent = [];
 const bound = [];
+let managedPrompts = 0;
 const chat = { sessionId: 'session-1', reference: {}, release() {}, insertContext(text) { inserted.push(text); }, async sendPrompt(text, allowed) { sent.push({ text, allowed }); } };
 const api = {
   defaultChatWorkspace: () => 'default',
@@ -32,7 +33,7 @@ const SessionProvider = ({ children }) => children;
 const renderSlot = () => React.createElement('div', { 'data-conversation-scroll':'' }, React.createElement('div', { 'data-composer-seat':'' }, '原生对话'));
 const root = createRoot(document.getElementById('root'));
 const render = context => root.render(React.createElement(AskArticle, {
-  api, context, SessionProvider, renderSlot, onClose() {},
+  api, context, SessionProvider, renderSlot, onClose() {}, onManagePrompts() { managedPrompts++; },
 }));
 render({ key: 'article-1', title: '文章', version: 'original', selection: '第一段', quoteId: 1 });
 for (let i = 0; i < 6; i++) await tick();
@@ -45,6 +46,8 @@ assert.ok(document.body.textContent.includes('原生对话'));
 const strip = document.querySelector('.qrs-companion-prompt-strip');
 assert.ok(strip, 'quick prompts should appear above the native composer');
 assert.equal(strip.parentElement.nextElementSibling?.getAttribute('data-composer-seat'), '', 'prompt strip must precede composer seat');
+strip.querySelector('[aria-label="新增快捷提示词"]').click();
+assert.equal(managedPrompts, 1, 'the trailing plus opens quick prompt management');
 strip.querySelector('button').click();
 await tick();
 assert.ok(sent[0].text.includes('三点概括'), 'quick prompt sends directly');

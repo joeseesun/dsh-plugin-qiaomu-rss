@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Pencil, Copy, RefreshCw, Trash2, X, Folder } from 'lucide-react';
 
 function host(url) {
@@ -15,6 +15,8 @@ export function SubscriptionManager({ api, subscriptions, onChange, notify }) {
   const [editingGroup, setEditingGroup] = useState(null);
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const errorCount = subscriptions.filter(sub => sub.lastError).length;
+  useEffect(() => { if (!errorCount) setErrorsOnly(false); }, [errorCount]);
   const visible = subscriptions.filter((sub) => (!errorsOnly || sub.lastError) && `${sub.name} ${sub.group ?? ''} ${sub.url}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const groups = [...new Set(subscriptions.map(sub => sub.group).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'zh-CN'));
   const execute = async (operation) => {
@@ -39,7 +41,7 @@ export function SubscriptionManager({ api, subscriptions, onChange, notify }) {
   return <section className="qrs-subscriptions" aria-label="管理订阅">
     <div className="qrs-subscriptions-toolbar">
       <label className="qrs-subscriptions-search"><Search size={16} /><input aria-label="搜索订阅" placeholder="搜索名称、分组或地址" value={query} onChange={event => setQuery(event.target.value)} /></label>
-      <div className="qrs-segmented" role="group" aria-label="订阅状态"><button type="button" aria-pressed={!errorsOnly} onClick={() => setErrorsOnly(false)}>全部</button><button type="button" aria-pressed={errorsOnly} onClick={() => setErrorsOnly(true)}>获取失败</button></div>
+      {errorCount > 0 && <div className="qrs-segmented" role="group" aria-label="订阅状态"><button type="button" aria-pressed={!errorsOnly} onClick={() => setErrorsOnly(false)}>全部</button><button type="button" aria-pressed={errorsOnly} title="筛选获取失败的订阅源" onClick={() => setErrorsOnly(true)}>异常 {errorCount}</button></div>}
     </div>
     <div className="qrs-subscriptions-selection"><button type="button" disabled={busy || !visible.length} onClick={() => setSelected(visible.map(sub => sub.id))}>选择当前结果</button><span>{visible.length} 个结果</span></div>
     {selected.length > 0 && <div className="qrs-subscriptions-batch" aria-label="批量操作">
@@ -61,7 +63,7 @@ export function SubscriptionManager({ api, subscriptions, onChange, notify }) {
           <button type="button" aria-label={`复制 ${sub.name} 地址`} title="复制地址" onClick={() => void navigator.clipboard.writeText(sub.url).then(() => notify('地址已复制')).catch(error => notify(`复制失败：${error.message}`,true))}><Copy size={15} /></button>
         </div>
       </div>)}
-      {!visible.length && <div className="qrs-subscriptions-empty">没有匹配的订阅源</div>}
+      {!visible.length && <div className="qrs-subscriptions-empty">{errorsOnly ? '没有获取失败的订阅源' : '没有匹配的订阅源'}</div>}
     </div>
     {groups.length > 0 && <div className="qrs-group-manager"><div className="qrs-group-heading"><strong>订阅分组</strong><span>{groups.length} 个分组</span></div>
       {groups.map(name => <div className="qrs-group-row" key={name}><Folder size={15} /><span>{name}</span><small>{subscriptions.filter(sub => sub.group === name).length} 个订阅源</small><button type="button" aria-label={`编辑分组 ${name}`} onClick={() => setEditingGroup({ oldName:name, name })}><Pencil size={15} /></button></div>)}

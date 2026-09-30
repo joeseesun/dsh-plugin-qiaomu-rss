@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import { readQuickPrompts, saveQuickPrompts } from './quick-prompts.js';
 
-export function PromptManager({ notify }) {
+export function PromptManager({ notify, startAdding = false }) {
   const [items, setItems] = useState(readQuickPrompts);
-  const [editing, setEditing] = useState(null);
+  const [editing, setEditing] = useState(() => startAdding && readQuickPrompts().length < 20 ? { title:'', body:'' } : null);
   const save = () => {
     const title = editing.title.trim();
     const body = editing.body.trim();

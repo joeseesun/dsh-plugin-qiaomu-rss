@@ -11,8 +11,8 @@ const TABS = [['reading', '阅读体验', BookOpen], ['sources', '订阅管理',
 const REWARD_QR = 'https://radio.qiaomu.ai/assets/qiaomu_reward_qr.png';
 const FOLLOW_QR = 'https://radio.qiaomu.ai/assets/qiaomu_wechat_public_account_qr.jpg';
 
-export function SettingsPage({ api, onClose, notify }) {
-  const [tab, setTab] = useState('reading');
+export function SettingsPage({ api, onClose, notify, initialTab = 'reading', startAddingPrompt = false }) {
+  const [tab, setTab] = useState(initialTab);
   const [settings, setSettings] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
   const [message, setMessage] = useState('');
@@ -93,7 +93,7 @@ export function SettingsPage({ api, onClose, notify }) {
               <SubscriptionManager api={api} subscriptions={subscriptions} onChange={setSubscriptions} notify={(text, isError) => { setMessage(text); if (isError) notify(text, true); }} />
             </div>
           </section>}
-          {tab === 'prompts' && <section aria-label="快捷提示词设置"><div className="qrs-settings-intro"><h2>快捷提示词</h2><p>把常用的阅读提问放在手边。</p></div><div className="qrs-settings-card"><PromptManager notify={setMessage} /></div></section>}
+          {tab === 'prompts' && <section aria-label="快捷提示词设置"><div className="qrs-settings-intro"><h2>快捷提示词</h2><p>把常用的阅读提问放在手边。</p></div><div className="qrs-settings-card"><PromptManager notify={setMessage} startAdding={startAddingPrompt} /></div></section>}
           {tab === 'about' && <section aria-label="关于乔木 RSS">
             <div className="qrs-settings-intro"><h2>关于乔木 RSS</h2><p>为 DeepSeek Harness 打造的安静阅读空间。</p></div>
             <div className="qrs-settings-card qrs-settings-about-card"><div className="qrs-settings-about-brand"><span>乔</span><div><h3>乔木 RSS</h3><p>版本 {packageInfo.version} · GPL-3.0-only</p></div></div><p>阅读乔木精选与个人 RSS，并用 Harness 原生 AI 对话伴读。阅读数据保存在本机 Harness 目录。</p></div>

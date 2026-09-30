@@ -269,6 +269,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   const [selected, setSelected] = useState(undefined);
   const [toast, setToast] = useState(undefined);
   const [dialog, setDialog] = useState(undefined);
+  const [settingsEntry, setSettingsEntry] = useState({ tab:'reading', addPrompt:false });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerAnchor, setPickerAnchor] = useState(null);
   useEffect(() => { if (dialog) setPickerOpen(false); }, [dialog]);
@@ -708,7 +709,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
         onPointerCancel={event=>{companionDrag.current=false;event.currentTarget.dataset.dragging='false';}}
         onKeyDown={event=>{const step=event.shiftKey?10:2;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();const next=Math.max(25,Math.min(75,companionWidth+(['ArrowLeft','ArrowUp'].includes(event.key)?step:-step)));companionWidthRef.current=next;setCompanionWidth(next);localStorage.setItem('qrs.companionWidth',String(next));}}}
         onDoubleClick={()=>{companionWidthRef.current=44;setCompanionWidth(44);localStorage.setItem('qrs.companionWidth','44');}} />}
-      {askContext && <AskArticle api={api} context={askContext} SessionProvider={SessionProvider} renderSlot={renderSlot} onClose={() => setAskContext(null)} />}
+      {askContext && <AskArticle api={api} context={askContext} SessionProvider={SessionProvider} renderSlot={renderSlot} onClose={() => setAskContext(null)} onManagePrompts={() => { setSettingsEntry({ tab:'prompts', addPrompt:true }); setDialog('settings'); }} />}
       </div>
       <MediaDock episode={episode} onOpen={openArticle} onClose={() => setEpisode(null)} />
       {pickerOpen && !dialog && (
@@ -717,7 +718,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
       )}
       {dialog === 'discover' && <Discover api={api} onClose={() => setDialog(undefined)} onAdded={loadChannels} />}
       {dialog === 'add' && <AddFeedDialog api={api} onClose={() => setDialog(undefined)} onDone={async () => { await loadChannels(); await loadPage(undefined, true); }} notify={notify} />}
-      {dialog === 'settings' && <SettingsPage api={api} onClose={() => setDialog(undefined)} notify={notify} />}
+      {dialog === 'settings' && <SettingsPage api={api} initialTab={settingsEntry.tab} startAddingPrompt={settingsEntry.addPrompt} onClose={() => { setDialog(undefined); setSettingsEntry({ tab:'reading', addPrompt:false }); }} notify={notify} />}
       {toast && <div className={`qrs-toast${toast.isError ? ' is-error' : ''}`}>{toast.message}</div>}
     </div>
   );

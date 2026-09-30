@@ -1,4 +1,5 @@
 import { FONTS, TEXT_WIDTHS, THEMES, READING_DEFAULTS } from '../reading-settings.js';
+import { Monitor } from 'lucide-react';
 
 /** Shared controls for the quick popover and the full plugin settings page. */
 export function ReadingControls({ settings, onChange, variant = 'compact' }) {
@@ -39,7 +40,7 @@ export function ReadingControls({ settings, onChange, variant = 'compact' }) {
         </div>
         <div className="qrs-reading-setting qrs-theme-setting">
           <span>阅读主题</span>
-          {page ? <div className="qrs-theme-options" role="group" aria-label="阅读主题">{[['auto','跟随应用'],['light','明亮'],['paper','纸张'],['sage','青绿'],['mist','雾蓝'],['dark','深色'],['black','纯黑']].map(([value,label]) => <button key={value} type="button" aria-pressed={settings.readingTheme === value} onClick={() => set({ readingTheme:value })}><span className="qrs-theme-swatch" style={{ background: THEMES[value]?.[0] ?? 'linear-gradient(135deg,#f6f6f6 50%,#272727 50%)', color: THEMES[value]?.[1] ?? '#181818' }}>Aa</span><span>{label}</span></button>)}</div> :
+          {page ? <div className="qrs-theme-options" role="group" aria-label="阅读主题">{[['auto','跟随应用'],['light','明亮'],['paper','纸张'],['sage','青绿'],['mist','雾蓝'],['dark','深色'],['black','纯黑']].map(([value,label]) => <button key={value} type="button" aria-pressed={settings.readingTheme === value} onClick={() => set({ readingTheme:value })}><span className={`qrs-theme-swatch${value === 'auto' ? ' qrs-theme-swatch-auto' : ''}`} style={value === 'auto' ? undefined : { background: THEMES[value][0], color: THEMES[value][1] }}>{value === 'auto' ? <Monitor size={20} strokeWidth={1.6} /> : 'Aa'}</span><span>{label}</span></button>)}</div> :
             <select aria-label="阅读主题" value={settings.readingTheme} onChange={(event) => set({ readingTheme: event.target.value })}>{[['auto','跟随应用'],['light','明亮'],['paper','纸张'],['sage','青绿'],['mist','雾蓝'],['dark','深色'],['black','纯黑']].map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select>}
         </div>
         <div className="qrs-reading-setting">

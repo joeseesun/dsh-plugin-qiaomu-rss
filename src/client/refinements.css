@@ -105,9 +105,11 @@
 .qrs-companion-context { padding: 11px 16px; border-bottom-color: color-mix(in srgb, var(--qrs-fg) 9%, var(--qrs-bg)); color: var(--qrs-muted); }
 .qrs-companion-context strong { color: var(--qrs-fg); font-size: 12px; }
 .qrs-companion-prompt-anchor { min-width: 0; width: 100%; flex: none; }
-.qrs-companion-prompt-strip { display: flex; align-items: center; gap: 5px; min-width: 0; width: 100%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scrollbar-width: none; padding: 7px 14px 8px; white-space: nowrap; }
-.qrs-companion-prompt-strip::-webkit-scrollbar { display: none; }
+.qrs-companion-prompt-strip { display: flex; align-items: center; gap: 5px; min-width: 0; width: 100%; padding: 7px 14px 8px; white-space: nowrap; }
+.qrs-companion-prompt-scroll { display: flex; align-items: center; gap: 5px; min-width: 0; flex: 1; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scrollbar-width: none; }
+.qrs-companion-prompt-scroll::-webkit-scrollbar { display: none; }
 .qrs-companion-prompt-strip button { flex: none; min-height: 30px; padding: 5px 9px; border: 0; border-radius: 7px; background: transparent; color: var(--qrs-muted); font: inherit; font-size: 11px; line-height: 1.3; cursor: pointer; }
+.qrs-companion-prompt-strip .qrs-companion-add-prompt { display: grid; place-items: center; width: 30px; padding: 0; border: 1px solid var(--qrs-border); color: var(--qrs-fg); }
 .qrs-companion-prompt-strip button:hover { background: color-mix(in srgb, var(--qrs-fg) 6%, var(--qrs-bg)); color: var(--qrs-fg); }
 .qrs-companion-prompt-strip button:active { background: color-mix(in srgb, var(--qrs-fg) 10%, var(--qrs-bg)); }
 .qrs-companion-prompt-strip button:focus-visible { outline: 1px solid color-mix(in srgb, var(--qrs-fg) 40%, var(--qrs-bg)); outline-offset: -1px; }
@@ -163,6 +165,7 @@
 .qrs-theme-options button { display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 0; padding: 5px; border: 1px solid var(--qrs-border); border-radius: 8px; background: transparent; color: var(--qrs-muted); font: inherit; font-size: 10px; text-align: center; cursor: pointer; }
 .qrs-theme-options button[aria-pressed=true] { border-color: var(--qrs-fg); color: var(--qrs-fg); }
 .qrs-theme-swatch { display: grid; place-items: center; height: 44px; border-radius: 5px; font-family: Georgia,serif; font-size: 15px; }
+.qrs-theme-swatch-auto { background: var(--dsw-alias-bg-layer-2); color: var(--qrs-fg); }
 .qrs-switch { position: relative; display: inline-flex; align-items: center; cursor: pointer; }
 .qrs-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .qrs-switch span { display: block; width: 34px; height: 20px; border-radius: 999px; background: var(--qrs-border-strong); transition: background .15s; }
@@ -204,8 +207,9 @@
 .qrs-subscriptions { display: block !important; }
 .qrs-subscriptions-toolbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
 .qrs-subscriptions-search { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; height: 42px; padding: 0 12px; border: 1px solid var(--qrs-border); border-radius: 8px; color: var(--qrs-muted); }
-.qrs-subscriptions-search:focus-within { border-color: var(--qrs-accent); }
+.qrs-subscriptions-search:focus-within { border-color: color-mix(in srgb, var(--qrs-fg) 34%, var(--qrs-border)); }
 .qrs-subscriptions-search input { min-width: 0; flex: 1; height: 100%; border: 0; outline: 0; background: transparent; color: var(--qrs-fg); font: inherit; font-size: 12px; }
+.qrs-root .qrs-settings-page .qrs-subscriptions-search input:focus-visible { outline: none; box-shadow: none; border: 0; }
 .qrs-subscriptions-selection { display: flex; justify-content: space-between; align-items: center; padding: 8px 0 4px; color: var(--qrs-muted); font-size: 11px; }
 .qrs-subscriptions-selection button { border: 0; background: transparent; color: var(--qrs-muted); padding: 3px 0; font: inherit; cursor: pointer; }
 .qrs-subscriptions-selection button:hover { color: var(--qrs-fg); }
