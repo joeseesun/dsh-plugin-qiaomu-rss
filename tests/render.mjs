@@ -81,6 +81,8 @@ const ARTICLES = [
 const apiCalls = [];
 const apiArgs = [];
 let generatedOnce = false;
+let delayNextArticle = false;
+let unblockArticle;
 const api = new Proxy({}, {
   get(_target, name) {
     return (...args) => {
@@ -98,14 +100,14 @@ const api = new Proxy({}, {
       if (name === 'listEntries') return Promise.resolve(args[0]?.cursor
         ? { entries: [{ key: 'qiaomu:3', channelName: '乔木博客', title: 'Earlier article', publishedAt: '2026-09-01T10:00:00.000Z', read: true }], hasMore: false }
         : { entries: ARTICLES, hasMore: true, nextCursor: 'older' });
-      if (name === 'getArticle') return Promise.resolve({
+      if (name === 'getArticle') { const result = {
         article: { key: 'qiaomu:1', title: ARTICLES[0].title, titleZh: ARTICLES[0].titleZh, channelName: '乔木博客', url: 'https://example.org/a', author: 'Adam', publishedAt: '2026-09-07T10:00:00.000Z', read: false, favorite: false },
         html: '<p>Full <strong>body</strong> text</p>',
         versions: {
           translation: generatedOnce ? { available: true, source: 'local', markdown: '# 本地译文标题\n\n本地生成的译文正文' } : { available: false, status: 'missing' },
           rewrite: { available: true, source: 'qiaomu', markdown: '# 乔木改写标题\n\n改写正文段落' },
         },
-      });
+      }; return delayNextArticle ? new Promise(resolve => { unblockArticle = () => { delayNextArticle = false; resolve(result); }; }) : Promise.resolve(result); }
       if (name === 'generateVersion') { generatedOnce = true; return Promise.resolve({ title: '本地译文标题', markdown: '# 本地译文标题\n\n本地生成的译文正文', source: 'local' }); }
       if (name === 'saveSettings') return Promise.resolve({ settings: args[0] });
       if (name === 'opmlPreview') return Promise.resolve({ xml: '<opml/>', entries: [{ name: 'New feed', url: 'https://new.example/rss' }, { name: 'Dup', url: 'https://example.org/rss', duplicate: true }] });
@@ -147,7 +149,11 @@ if (!rows[1].querySelector('.qrs-entry-thumb img')) throw new Error('thumbnail m
 console.log('LIST ROWS OK — meta/date, unread+read dots, bookmark, summary, thumbnail');
 
 // ---- open article + reader toolbar ----------------------------------------
+delayNextArticle = true;
 rows[0].click();
+await tick();
+if (!container.querySelector('.qrs-article-loading[aria-label="正在加载文章"]') || container.querySelector('.qrs-welcome')) throw new Error('article skeleton did not replace welcome while loading');
+unblockArticle();
 for (let i = 0; i < 6; i += 1) await tick();
 if (!container.querySelector('.qrs-article h1')?.textContent.includes('研究加速')) throw new Error('article title missing');
 if (!container.querySelector('.qrs-prose')?.textContent.includes('Full')) throw new Error('article body missing');

@@ -14,6 +14,29 @@
 .qrs-root .qrs-filters .qrs-settings-button:hover { background: var(--qrs-hover); color: var(--qrs-fg); }
 .qrs-root .qrs-filters .qrs-settings-button svg { width: 17px; height: 17px; }
 
+/* Keep the reading measure stable while an article is fetched. */
+.qrs-article-loading { animation: qrs-skeleton-enter .16s ease .14s both; }
+.qrs-skeleton-toolbar { gap: 11px; }
+.qrs-skeleton-toolbar .qrs-skeleton-pill { width: 94px; height: 26px; border-radius: 999px; margin-right: 6px; }
+.qrs-skeleton-icon { width: 28px; height: 28px; border-radius: 7px; }
+.qrs-article-skeleton { padding-top: 34px; }
+.qrs-skeleton { background: color-mix(in srgb, var(--qrs-fg) 8%, var(--qrs-bg)); background-image: linear-gradient(100deg, transparent 18%, color-mix(in srgb, var(--qrs-bg) 65%, transparent) 50%, transparent 82%); background-size: 200% 100%; animation: qrs-skeleton-shimmer 1.7s ease-in-out infinite; }
+.qrs-skeleton-meta { width: 132px; height: 15px; border-radius: 5px; margin-bottom: 28px; }
+.qrs-skeleton-title { width: 82%; height: 29px; border-radius: 6px; margin-bottom: 14px; }
+.qrs-skeleton-title.short { width: 56%; margin-bottom: 50px; }
+.qrs-skeleton-paragraph { display: grid; gap: 19px; margin-bottom: 51px; }
+.qrs-skeleton-paragraph .qrs-skeleton { height: 14px; border-radius: 5px; }
+.qrs-skeleton-paragraph .qrs-skeleton:nth-child(2) { width: 93%; }
+.qrs-skeleton-paragraph .qrs-skeleton:last-child { width: 67%; }
+@keyframes qrs-skeleton-enter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes qrs-skeleton-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .qrs-article-loading { animation: none; } .qrs-skeleton { animation: none; background-image: none; } }
+.qrs-article-load-error { display: grid; justify-items: start; gap: 9px; width: min(100% - 48px, 480px); margin: clamp(60px, 12vh, 140px) auto; color: var(--qrs-muted); }
+.qrs-article-load-error h2 { margin: 7px 0 0; color: var(--qrs-fg); font-size: 19px; }
+.qrs-article-load-error p { margin: 0 0 9px; font-size: 13px; }
+.qrs-article-load-error button { min-height: 36px; padding: 0 13px; border: 1px solid color-mix(in srgb, var(--qrs-fg) 18%, var(--qrs-bg)); border-radius: 8px; background: transparent; color: var(--qrs-fg); font: inherit; font-size: 12px; cursor: pointer; }
+.qrs-article-load-error button:hover { background: color-mix(in srgb, var(--qrs-fg) 5%, var(--qrs-bg)); }
+
 /* Reading surfaces keep their paper/dark theme through hover and selection. */
 .qrs-root button.qrs-entry:hover,
 .qrs-root .qrs-filters button:hover,
@@ -81,13 +104,14 @@
 .qrs-companion-header strong { color: var(--qrs-fg); font-size: 14px; }
 .qrs-companion-context { padding: 11px 16px; border-bottom-color: color-mix(in srgb, var(--qrs-fg) 9%, var(--qrs-bg)); color: var(--qrs-muted); }
 .qrs-companion-context strong { color: var(--qrs-fg); font-size: 12px; }
-.qrs-companion-prompts { position: relative; flex: none; padding: 8px 13px; border-bottom: 1px solid color-mix(in srgb, var(--qrs-fg) 9%, var(--qrs-bg)); }
-.qrs-companion-prompts > button { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 10px; border: 1px solid color-mix(in srgb, var(--qrs-fg) 15%, var(--qrs-bg)); border-radius: 8px; background: transparent; color: var(--qrs-fg); font: inherit; font-size: 12px; cursor: pointer; }
-.qrs-companion-prompts > button:hover { background: color-mix(in srgb, var(--qrs-fg) 5%, var(--qrs-bg)); }
-.qrs-companion-prompt-menu { position: absolute; top: calc(100% - 2px); left: 13px; z-index: 10; display: grid; gap: 2px; width: min(260px, calc(100% - 26px)); padding: 6px; border: 1px solid color-mix(in srgb, var(--qrs-fg) 14%, var(--qrs-bg)); border-radius: 9px; background: var(--qrs-bg); box-shadow: 0 12px 28px rgba(0,0,0,.13); }
-.qrs-companion-prompt-menu button { min-height: 36px; padding: 7px 9px; border: 0; border-radius: 6px; background: transparent; color: var(--qrs-fg); text-align: left; font: inherit; font-size: 12px; cursor: pointer; }
-.qrs-companion-prompt-menu button:hover { background: color-mix(in srgb, var(--qrs-fg) 6%, var(--qrs-bg)); }
-.qrs-companion-prompt-menu span { padding: 9px; color: var(--qrs-muted); font-size: 12px; }
+.qrs-companion-prompt-anchor { min-width: 0; width: 100%; flex: none; }
+.qrs-companion-prompt-strip { display: flex; align-items: center; gap: 5px; min-width: 0; width: 100%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scrollbar-width: none; padding: 7px 14px 8px; white-space: nowrap; }
+.qrs-companion-prompt-strip::-webkit-scrollbar { display: none; }
+.qrs-companion-prompt-strip button { flex: none; min-height: 30px; padding: 5px 9px; border: 0; border-radius: 7px; background: transparent; color: var(--qrs-muted); font: inherit; font-size: 11px; line-height: 1.3; cursor: pointer; }
+.qrs-companion-prompt-strip button:hover { background: color-mix(in srgb, var(--qrs-fg) 6%, var(--qrs-bg)); color: var(--qrs-fg); }
+.qrs-companion-prompt-strip button:active { background: color-mix(in srgb, var(--qrs-fg) 10%, var(--qrs-bg)); }
+.qrs-companion-prompt-strip button:focus-visible { outline: 1px solid color-mix(in srgb, var(--qrs-fg) 40%, var(--qrs-bg)); outline-offset: -1px; }
+.qrs-companion-prompt-strip button:disabled { opacity: .45; cursor: progress; }
 .qrs-native-chat :is(textarea,[contenteditable=true],[role=textbox]) { color: var(--qrs-fg); }
 .qrs-native-chat button[aria-label="发送消息"] { background: var(--qrs-fg); color: var(--qrs-bg); }
 .qrs-native-chat button[aria-label="发送消息"]:hover { background: color-mix(in srgb, var(--qrs-fg) 83%, var(--qrs-bg)); color: var(--qrs-bg); }

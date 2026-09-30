@@ -418,10 +418,10 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
 
   const openArticle = async (key, restoreVersion) => {
     const request = ++articleRequest.current;
-    setSelected({ loading: true });setPassage(null);if(document.querySelector('.qrs-root')?.clientWidth>0&&document.querySelector('.qrs-root').clientWidth<460)setFocused(true);
+    setSelected({ loading: true, key });setPassage(null);if(document.querySelector('.qrs-root')?.clientWidth>0&&document.querySelector('.qrs-root').clientWidth<460)setFocused(true);
     const data = await run(api.getArticle(key), { errorPrefix: '读取正文失败' });
     if (request !== articleRequest.current) return;
-    if (!data) { setSelected(undefined); return; }
+    if (!data) { setSelected({ error: true, key }); return; }
     setSelected({ ...data, article:{...data.article,read:true}, active: restoreVersion || reading.defaultVersion });document.querySelector('.qrs-reader')?.scrollTo?.({top:0});
     if (data.article?.read === false) {
       void api.setRead([key], true).catch(e=>notify(e.message,true));
@@ -598,7 +598,20 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
         <div className="qrs-resize" role="separator" aria-orientation="vertical" onPointerDown={startDrag}
           onDoubleClick={() => { setListWidth(300); localStorage.setItem('qrs.listWidth', '300'); }} />
         <section className="qrs-reader" tabIndex={0}>
-          {!activeArticle ? (
+          {selected?.loading ? (
+            <div className="qrs-article-loading" role="status" aria-label="正在加载文章">
+              <div className="qrs-reader-toolbar qrs-skeleton-toolbar" aria-hidden="true"><span className="qrs-skeleton qrs-skeleton-icon" /><span className="qrs-skeleton qrs-skeleton-pill" /><span className="qrs-skeleton qrs-skeleton-icon" /><span className="qrs-skeleton qrs-skeleton-icon" /></div>
+              <div className="qrs-article qrs-article-skeleton" aria-hidden="true">
+                <div className="qrs-skeleton qrs-skeleton-meta" /><div className="qrs-skeleton qrs-skeleton-title" /><div className="qrs-skeleton qrs-skeleton-title short" />
+                <div className="qrs-skeleton-paragraph"><div className="qrs-skeleton" /><div className="qrs-skeleton" /><div className="qrs-skeleton" /></div>
+                <div className="qrs-skeleton-paragraph"><div className="qrs-skeleton" /><div className="qrs-skeleton" /><div className="qrs-skeleton" /></div>
+                <div className="qrs-skeleton-paragraph"><div className="qrs-skeleton" /><div className="qrs-skeleton" /></div>
+              </div>
+              <span className="qrs-visually-hidden">正在加载文章…</span>
+            </div>
+          ) : selected?.error ? (
+            <div className="qrs-article-load-error" role="alert"><Icon name="file-check" size={22} /><h2>文章暂时无法打开</h2><p>请重试读取这篇文章。</p><button type="button" onClick={() => void openArticle(selected.key)}>重新加载</button></div>
+          ) : !activeArticle ? (
             <div className="qrs-welcome">
               <div className="qrs-welcome-brand">QIAOMU RSS</div>
               <h2>在 Harness 里读乔木精选</h2>
@@ -697,7 +710,6 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
         onDoubleClick={()=>{companionWidthRef.current=44;setCompanionWidth(44);localStorage.setItem('qrs.companionWidth','44');}} />}
       {askContext && <AskArticle api={api} context={askContext} SessionProvider={SessionProvider} renderSlot={renderSlot} onClose={() => setAskContext(null)} />}
       </div>
-      {selected?.loading && <div className="qrs-toast">正在加载正文…</div>}
       <MediaDock episode={episode} onOpen={openArticle} onClose={() => setEpisode(null)} />
       {pickerOpen && !dialog && (
         <ChannelPicker channels={channels} current={channel} anchor={pickerAnchor} onClose={() => setPickerOpen(false)}

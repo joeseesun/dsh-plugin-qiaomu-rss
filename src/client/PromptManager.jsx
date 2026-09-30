@@ -17,7 +17,7 @@ export function PromptManager({ notify }) {
     notify('快捷提示词已保存');
   };
   return <div className="qrs-prompt-manager">
-    <div className="qrs-settings-card-head qrs-settings-source-head"><div><h3>快捷提示词</h3><p>在 AI 伴读中一键填入原生对话输入框，发送前仍可修改。</p></div>
+    <div className="qrs-settings-card-head qrs-settings-source-head"><div><h3>快捷提示词</h3><p>显示在伴读输入框上方，点击后直接发送。输入框已有草稿时会保留草稿。</p></div>
       <button type="button" className="qrs-prompt-add" disabled={items.length >= 20} onClick={() => setEditing({ title:'', body:'' })}><Plus size={15} />新增</button></div>
     <div className="qrs-prompt-list">{items.map(item => <div className="qrs-prompt-row" key={item.id}>
       <div><strong>{item.title}</strong><span>{item.body}</span></div>

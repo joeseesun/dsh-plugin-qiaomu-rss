@@ -11,23 +11,25 @@ const dom = new JSDOM('<div id="root"></div>', { url: 'http://localhost/' });
 globalThis.window = dom.window;
 globalThis.document = dom.window.document;
 globalThis.localStorage = dom.window.localStorage;
+globalThis.MutationObserver = dom.window.MutationObserver;
 Object.defineProperty(globalThis, 'navigator', { configurable: true, value: dom.window.navigator });
 const compiled = resolve('.cache/AskArticle-test.mjs');
 mkdirSync(resolve('.cache'), { recursive: true });
 await esbuild.build({ entryPoints: ['src/client/AskArticle.jsx'], outfile: compiled, bundle: true,
-  platform: 'node', format: 'esm', jsx: 'automatic', external: ['react', 'react/jsx-runtime', 'lucide-react'] });
+  platform: 'node', format: 'esm', jsx: 'automatic', external: ['react', 'react/jsx-runtime', 'react-dom', 'lucide-react'] });
 const { AskArticle } = await import(pathToFileURL(compiled));
 const tick = () => new Promise(resolveTick => setTimeout(resolveTick, 20));
 const inserted = [];
+const sent = [];
 const bound = [];
-const chat = { sessionId: 'session-1', reference: {}, release() {}, insertContext(text) { inserted.push(text); } };
+const chat = { sessionId: 'session-1', reference: {}, release() {}, insertContext(text) { inserted.push(text); }, async sendPrompt(text, allowed) { sent.push({ text, allowed }); } };
 const api = {
   defaultChatWorkspace: () => 'default',
   openChat: async () => chat,
   setReadingContext: async context => { bound.push(context); },
 };
 const SessionProvider = ({ children }) => children;
-const renderSlot = () => React.createElement('div', null, '原生对话');
+const renderSlot = () => React.createElement('div', { 'data-conversation-scroll':'' }, React.createElement('div', { 'data-composer-seat':'' }, '原生对话'));
 const root = createRoot(document.getElementById('root'));
 const render = context => root.render(React.createElement(AskArticle, {
   api, context, SessionProvider, renderSlot, onClose() {},
@@ -40,12 +42,13 @@ assert.ok(inserted[0].includes('引用选段：「第一段」'));
 assert.equal(bound[0].selection, '第一段', 'the model still receives the complete selection');
 assert.ok(!document.querySelector('.qrs-companion-context').textContent.includes('第一段'), 'the header must not repeat selected text');
 assert.ok(document.body.textContent.includes('原生对话'));
-document.querySelector('.qrs-companion-prompts > button').click();
+const strip = document.querySelector('.qrs-companion-prompt-strip');
+assert.ok(strip, 'quick prompts should appear above the native composer');
+assert.equal(strip.parentElement.nextElementSibling?.getAttribute('data-composer-seat'), '', 'prompt strip must precede composer seat');
+strip.querySelector('button').click();
 await tick();
-document.querySelector('.qrs-companion-prompt-menu button').click();
-await tick();
-assert.ok(inserted.at(-1).includes('三点概括'), 'quick prompt inserts into the native draft');
-inserted.pop();
+assert.ok(sent[0].text.includes('三点概括'), 'quick prompt sends directly');
+assert.ok(sent[0].allowed.includes('引用选段'), 'only the generated selection preview may be replaced');
 render({ key: 'article-1', title: '文章', version: 'original', selection: '第一段', quoteId: 1 });
 await tick();
 assert.equal(inserted.length, 1, 'a rerender must not duplicate the selected quote');
