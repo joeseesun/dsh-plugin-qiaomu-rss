@@ -40,7 +40,7 @@ await esbuild.build({
 // ---- client ----------------------------------------------------------------
 
 const banner = `window.__ModuleLoader__.load({
-	id: "dsh-plugin-qiaomu-rss",
+	id: "qiaomu-rss-dsh",
 	factory: (require) => {
 		var module = { exports: {} };
 		var exports = module.exports;
