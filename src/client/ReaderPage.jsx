@@ -269,6 +269,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   const [toast, setToast] = useState(undefined);
   const [dialog, setDialog] = useState(undefined);
   const [pickerOpen, setPickerOpen] = useState(false);
+  useEffect(() => { if (dialog) setPickerOpen(false); }, [dialog]);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -656,7 +657,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
       </div>
       {selected?.loading && <div className="qrs-toast">正在加载正文…</div>}
       <MediaDock episode={episode} onOpen={openArticle} onClose={() => setEpisode(null)} />
-      {pickerOpen && (
+      {pickerOpen && !dialog && (
         <ChannelPicker channels={channels} current={channel} onClose={() => setPickerOpen(false)}
           onSelect={(key) => {if(key!==channel){articleRequest.current++;setAskContext(null);setFocused(false);setSelected(undefined);setPassage(null);setFilter('all');setQuery('');setChannel(key);}}} onManage={() => { setPickerOpen(false); setDialog('settings'); }} />
       )}

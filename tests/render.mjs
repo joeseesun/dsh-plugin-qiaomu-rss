@@ -264,10 +264,13 @@ console.log('SETTINGS OK — reading, subscriptions/OPML, about/support');
 // Discovery keeps filtering and the add action within a compact, scrollable list.
 container.querySelector('.qrs-settings-head button[aria-label="关闭设置"]').click();
 await tick();
+container.querySelector('.qrs-channel').click();
+await tick();
 container.querySelector('button[aria-label="探索订阅"]').click();
 await tick();
 const discover = container.querySelector('.qrs-discover');
 if (!discover?.querySelector('.qrs-discover-results')) throw new Error('discovery list missing');
+if (container.querySelector('.qrs-channel-picker')) throw new Error('channel picker overlaps discovery');
 if (discover.querySelectorAll('.qrs-discover-row').length < 10) throw new Error('too few discovery results');
 if (!discover.querySelector('.qrs-discover-row .qrs-discover-add')) throw new Error('feed action is outside its row');
 const featuredTab = [...discover.querySelectorAll('.qrs-discover-categories button')].find((node) => node.textContent === '精选作者');
