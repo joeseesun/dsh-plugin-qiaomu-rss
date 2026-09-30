@@ -17,12 +17,6 @@
 
 Read RSS inside DeepSeek Harness and discuss the current article in its native AI conversation.
 
-**[下载 v0.5.1 安装包](https://github.com/joeseesun/qiaomu-rss-dsh/releases/tag/v0.5.1)** · [安装步骤](#安装) · [查看真实界面](#真实界面)
-
-![乔木 RSS：文章列表、原文阅读与真实 AI 伴读回答](docs/screenshots/ai-companion.jpg)
-
-*本机 DeepSeek Harness 桌面构建实拍：打开 Planet Money 文章，发送「概括要点」，右侧原生 AI 对话返回了对应文章的三点概括。*
-
 这是公开源码的社区插件，并非 DeepSeek 官方维护或背书。预构建安装包见 [GitHub Releases](https://github.com/joeseesun/qiaomu-rss-dsh/releases)；目前不发布 npm 包。已在 DeepSeek Harness 0.2.0-rc.2 的 Desktop 和隔离 Web profile 中验证。
 
 ## 能做什么
@@ -37,19 +31,14 @@ Read RSS inside DeepSeek Harness and discuss the current article in its native A
 
 ## 真实界面
 
-截图来自本机已安装的 DeepSeek Harness 桌面开发构建，保留了实际文章、订阅源和操作结果；画面不代表每个 Release 包都已在所有平台验证。
+<details>
+<summary>查看已合并的桌面版 AI 伴读实拍</summary>
 
-### 阅读与乔木改写
+![真实 AI 伴读：文章与原生对话](docs/screenshots/ai-companion.jpg)
 
-从订阅列表打开播客文章，切换到「乔木改写」阅读。文章图片和正文均来自实际订阅内容。
+此前桌面构建实拍：打开 Planet Money 文章后，发送「概括要点」，右侧返回对应文章的概括。该截图由此前的 [PR #6](https://github.com/joeseesun/qiaomu-rss-dsh/pull/6) 合入；本轮隔离环境没有配置模型密钥，不据此声称重测了模型回答。
 
-![乔木 RSS：订阅列表和乔木改写文章](docs/screenshots/reader.jpg)
-
-### 探索订阅
-
-打开「探索订阅」，可按类别查找 RSS 源，并区分已订阅与可添加的频道。
-
-![乔木 RSS：探索订阅中的真实频道和订阅操作](docs/screenshots/discover-subscriptions.jpg)
+</details>
 
 切换频道时先显示已缓存文章，再自动拉取该频道的新内容；刷新按钮仍可手动强制更新。切换文章时，阅读区用轻量骨架显示加载状态。默认阅读版本仅在当前文章有内容时生效，缺失时自动选择其他已有版本或原文；手动选择缺失版本仍可调用 Harness 生成。文章与伴读之间的分割线可拖动，也可用方向键微调、双击复位。打开伴读时文章列表保持可见，文章左上角也可打开频道列表。伴读输入框上方的快捷提示词可横向滚动点选并直接发送；末端的 + 可直达设置新增提示词。已有手写草稿时不会覆盖或误发。本机个人提示词保存在插件的浏览器存储中，可在设置中编辑。探索订阅包含来自原版乔木 RSS 目录的 73 个播客 RSS 源；订阅后可使用文章中的音频附件播放。插件不提供 Obsidian 式笔记、划线保存或日记写入。
 
@@ -104,7 +93,7 @@ npm pack
 
 ## English
 
-The [live desktop screenshots](#真实界面) show a real feed, the rewritten reading view, subscription discovery, and an article-specific native AI response from a locally installed development build. [Download v0.5.1](https://github.com/joeseesun/qiaomu-rss-dsh/releases/tag/v0.5.1) or follow the install steps above.
+The [live desktop screenshots](#真实界面) show a real feed, the rewritten reading view, subscription discovery, and an article-specific native AI response from a locally installed development build. [Download v0.5.2](https://github.com/joeseesun/qiaomu-rss-dsh/releases/tag/v0.5.2) or follow the install steps above.
 
 Qiaomu RSS brings curated and personal RSS/Atom feeds into DeepSeek Harness. Read the original, translated, or rewritten article; manage unread items and favorites; import/export OPML; and open a native Harness AI conversation beside the article with its reading context attached. The companion opens directly in the default workspace. The article/chat divider is resizable.
 
