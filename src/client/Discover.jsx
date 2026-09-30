@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import blogCatalog from '../data/independent-blogs.json';
+import { Icon } from './icons.jsx';
 
-// Feed names and public endpoints checked against upstream discovery.ts.
-// https://github.com/joeseesun/qiaomu-ai-rss (db738ca)
 const featured = [
   ['潮流周刊 · Tw93','https://weekly.tw93.fun/rss.xml'],
   ['阮一峰的网络日志','https://www.ruanyifeng.com/blog/atom.xml'],
@@ -21,41 +20,71 @@ const wechat = [
 ].map(([name,id]) => ({ name,url:`https://rss.t5t6.com/weread/MP_WXS_${id}.xml`,category:'微信公众号' }));
 const catalog = [...featured,...wechat,...blogCatalog.items.map((entry) => ({ ...entry, category:'独立博客' }))];
 const topics = [...new Set(blogCatalog.items.flatMap((entry) => entry.tags ?? []))].sort();
+const categories = ['全部','精选作者','微信公众号','独立博客'];
+function feedHost(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); }
+  catch { return url; }
+}
 
 export function Discover({ api, onClose, onAdded }) {
   const [query,setQuery] = useState('');
   const [category,setCategory] = useState('全部');
   const [topic,setTopic] = useState('');
   const [limit,setLimit] = useState(40);
-  useEffect(() => setLimit(40),[query,category,topic]);
   const [subscribed,setSubscribed] = useState([]);
   const [busy,setBusy] = useState('');
   const [message,setMessage] = useState('');
+  useEffect(() => setLimit(40),[query,category,topic]);
   useEffect(() => { void api.listSubscriptions().then((result) => setSubscribed(result.subscriptions.map((sub) => sub.url))).catch((error) => setMessage(error.message)); },[api]);
-  const visible = catalog.filter((entry) => (category === '全部' || entry.category === category) && (!topic || entry.tags?.includes(topic)) && `${entry.name} ${entry.url} ${(entry.tags ?? []).join(' ')}`.toLowerCase().includes(query.toLowerCase()));
-  return <div className="qmrss-dialog-backdrop"><div className="qmrss-dialog" role="dialog" aria-label="探索订阅">
-    <h3>探索订阅</h3>
-    <input aria-label="搜索推荐源" placeholder="搜索作者或地址" value={query} onChange={(e) => setQuery(e.target.value)} />
-    <select aria-label="推荐源分类" value={category} onChange={(e) => setCategory(e.target.value)}>{['全部','精选作者','微信公众号','独立博客'].map((name) => <option key={name}>{name}</option>)}</select>
-    <p style={{ fontSize:12 }}>公众号源由第三方公开服务提供；可能只有摘要。浏览目录不会自动添加订阅。</p>
-    <select aria-label="主题标签" value={topic} onChange={(e) => setTopic(e.target.value)}><option value="">全部主题</option>{topics.map((tag) => <option key={tag}>{tag}</option>)}</select>
-    <p style={{ fontSize:12 }}>独立博客 {blogCatalog.items.length} 个 · <a href={blogCatalog.source} target="_blank" rel="noreferrer">Tim Qian 目录</a> · MIT © 2019 Tim Qian。匹配 {visible.length} 项。</p>
-    {visible.slice(0,limit).map((entry,index) => <div key={`${entry.url}:${index}`} style={{ padding:8,borderBottom:'1px solid var(--dsw-alias-border-l1)' }}>
-      <strong>{entry.name}</strong><div style={{ fontSize:12,overflowWrap:'anywhere' }}>{entry.url}</div>
-      <button type="button" className="qmrss-btn" disabled={Boolean(busy) || subscribed.includes(entry.url)} onClick={async () => {
-        setBusy(entry.url); setMessage('');
-        try {
-          const result = await api.addSubscription({ name:entry.name,url:entry.url,group:entry.category });
-          setSubscribed((current) => [...current,entry.url]);
-          setMessage(result.lastError ? `已添加，首次获取失败：${result.lastError}` : `已订阅 ${entry.name}`);
-          await onAdded();
-        } catch (error) { setMessage(error?.message ?? String(error)); }
-        finally { setBusy(''); }
-      }}>{subscribed.includes(entry.url) ? '已订阅' : busy === entry.url ? '添加中…' : '订阅'}</button>
-    </div>)}
-    {visible.length > limit && <button type="button" className="qmrss-btn" onClick={() => setLimit(limit + 40)}>显示更多推荐</button>}
-    {!visible.length && <p>没有匹配的推荐源。</p>}
-    {message && <div role="status">{message}</div>}
-    <button type="button" className="qmrss-btn" onClick={onClose}>关闭探索</button>
-  </div></div>;
+  useEffect(() => {
+    const closeOnEscape = (event) => { if (event.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [onClose]);
+  const visible = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase();
+    return catalog.filter((entry) => (category === '全部' || entry.category === category) && (!topic || entry.tags?.includes(topic)) && `${entry.name} ${entry.url} ${(entry.tags ?? []).join(' ')}`.toLocaleLowerCase().includes(needle));
+  }, [query,category,topic]);
+  const add = async (entry) => {
+    setBusy(entry.url); setMessage('');
+    try {
+      const result = await api.addSubscription({ name:entry.name,url:entry.url,group:entry.category });
+      setSubscribed((current) => [...current,entry.url]);
+      setMessage(result.lastError ? `已添加，首次获取失败：${result.lastError}` : `已订阅 ${entry.name}`);
+      await onAdded();
+    } catch (error) { setMessage(error?.message ?? String(error)); }
+    finally { setBusy(''); }
+  };
+  return <div className="qmrss-dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+    <div className="qmrss-dialog qrs-discover" role="dialog" aria-modal="true" aria-label="探索订阅">
+      <header className="qrs-discover-head">
+        <div><h3>探索订阅</h3><p>找到感兴趣的内容，加入你的频道。</p></div>
+        <button type="button" className="qrs-icon" aria-label="关闭探索" title="关闭" onClick={onClose}><Icon name="x" /></button>
+      </header>
+      <div className="qrs-discover-filters">
+        <label className="qrs-discover-search"><Icon name="search" /><input autoFocus aria-label="搜索推荐源" placeholder="搜索作者、网站或 RSS 地址" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+        <div className="qrs-discover-categories" role="group" aria-label="推荐源分类">
+          {categories.map((name) => <button key={name} type="button" className={category === name ? 'active' : ''} aria-pressed={category === name} onClick={() => { setCategory(name); if (name !== '全部' && name !== '独立博客') setTopic(''); }}>{name}</button>)}
+        </div>
+        <div className="qrs-discover-filter-line"><span>{visible.length} 个结果</span><select aria-label="主题标签" value={topic} onChange={(event) => setTopic(event.target.value)} disabled={category !== '全部' && category !== '独立博客'}><option value="">全部主题</option>{topics.map((tag) => <option key={tag}>{tag}</option>)}</select></div>
+      </div>
+      <div className="qrs-discover-results">
+        {visible.slice(0,limit).map((entry,index) => {
+          const added = subscribed.includes(entry.url);
+          return <div key={`${entry.url}:${index}`} className="qrs-discover-row">
+            <span className="qrs-discover-avatar" aria-hidden="true">{entry.name.slice(0,1)}</span>
+            <div className="qrs-discover-info"><strong>{entry.name}</strong><span title={entry.url}>{feedHost(entry.url)}<span className="qrs-discover-dot"> · </span>{entry.category}</span></div>
+            <button type="button" className="qrs-discover-add" disabled={Boolean(busy) || added} aria-label={`${added ? '已订阅' : '订阅'} ${entry.name}`} onClick={() => void add(entry)}>{added ? '已订阅' : busy === entry.url ? '添加中…' : <><Icon name="plus" />订阅</>}</button>
+          </div>;
+        })}
+        {visible.length > limit && <button type="button" className="qrs-discover-more" onClick={() => setLimit((current) => current + 40)}>显示更多</button>}
+        {!visible.length && <div className="qrs-discover-empty">没有找到匹配的订阅源</div>}
+      </div>
+      <footer className="qrs-discover-foot">
+        {message && <div className="qrs-discover-message" role="status">{message}</div>}
+        <span>独立博客来自 <a href={blogCatalog.source} target="_blank" rel="noreferrer">Tim Qian 目录</a> · MIT</span>
+        <span>公众号源由第三方提供，可能只有摘要</span>
+      </footer>
+    </div>
+  </div>;
 }

@@ -1,14 +1,10 @@
 import { FONTS, TEXT_WIDTHS, READING_DEFAULTS } from '../reading-settings.js';
 
-/** Reading-appearance popover, mirroring the original 阅读设置 panel. */
-export function ReadingAppearance({ settings, onChange, onClose }) {
+/** Shared controls for the quick popover and the full plugin settings page. */
+export function ReadingControls({ settings, onChange }) {
   const set = (patch) => onChange(patch);
   return (
-    <div className="qrs-reading-settings" role="dialog" aria-label="阅读设置">
-      <div className="qrs-reading-settings-head">
-        <strong>阅读设置</strong>
-        <button type="button" onClick={onClose}>完成</button>
-      </div>
+    <>
       <div className="qrs-reading-settings-fields">
         <label className="qrs-reading-setting">
           <span>字体</span>
@@ -66,6 +62,14 @@ export function ReadingAppearance({ settings, onChange, onClose }) {
         onClick={() => set({ ...READING_DEFAULTS })}>
         恢复默认
       </button>
-    </div>
+    </>
   );
+}
+
+/** Compact reader-toolbar popover. */
+export function ReadingAppearance({ settings, onChange, onClose }) {
+  return <div className="qrs-reading-settings" role="dialog" aria-label="阅读设置">
+    <div className="qrs-reading-settings-head"><strong>阅读设置</strong><button type="button" onClick={onClose}>完成</button></div>
+    <ReadingControls settings={settings} onChange={onChange} />
+  </div>;
 }

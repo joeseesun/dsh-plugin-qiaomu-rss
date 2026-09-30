@@ -1,3 +1,5 @@
+import { WandSparkles } from 'lucide-react';
+
 /**
  * Minimal lucide-style icon set for the reader, mirroring the icon names the
  * original Obsidian plugin passes to `setIcon`. Stroke geometry follows the
@@ -47,6 +49,7 @@ const PATHS = {
 const ALIASES = { 'gamepad-2': 'gamepad', 'notebook-pen-2': 'notebook-pen', 'panel-left': 'panel-left-close' };
 
 export function Icon({ name, size = 17, className, strokeWidth = 1.7, ...rest }) {
+  if (name === 'wand-sparkles') return <WandSparkles size={size} className={className} strokeWidth={strokeWidth} aria-hidden="true" focusable="false" {...rest} />;
   const paths = PATHS[ALIASES[name] ?? name] ?? PATHS.circle;
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={size} height={size} fill="none"
@@ -57,4 +60,4 @@ export function Icon({ name, size = 17, className, strokeWidth = 1.7, ...rest })
   );
 }
 
-export function hasIcon(name) { return Object.hasOwn(PATHS, ALIASES[name] ?? name); }
+export function hasIcon(name) { return name === 'wand-sparkles' || Object.hasOwn(PATHS, ALIASES[name] ?? name); }

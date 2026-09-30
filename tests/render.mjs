@@ -217,6 +217,28 @@ container.querySelector('.qrs-reader-toolbar button[aria-label="显示列表"]')
 await tick();
 console.log('PAGINATION + FOCUS OK');
 
+// Selecting article text opens the companion directly; the old floating bar is gone.
+const prose = container.querySelector('.qrs-prose');
+const firstText = prose?.querySelector('p')?.firstChild;
+if (!firstText?.textContent) throw new Error('article selection fixture missing');
+const range = document.createRange();
+range.setStart(firstText, 0);
+range.setEnd(firstText, Math.min(8, firstText.textContent.length));
+window.getSelection().removeAllRanges();
+window.getSelection().addRange(range);
+prose.dispatchEvent(new dom.window.MouseEvent('mouseup', { bubbles: true }));
+await tick();
+if (!container.querySelector('.qrs-companion')) throw new Error('selection did not open companion');
+if (container.querySelector('.qrs-selection-bar')) throw new Error('legacy selection toolbar still visible');
+if (!container.querySelector('.qrs-actions .lucide-wand-sparkles')) throw new Error('Lucide wand icon missing');
+container.querySelector('.qrs-reader-toolbar button[aria-label="选择频道"]').click();
+await tick();
+if (!container.querySelector('.qrs-channel-picker')) throw new Error('reader top-left did not open channels in companion mode');
+container.querySelector('.qrs-channel-close').click();
+container.querySelector('.qrs-companion-header button[aria-label="关闭伴读"]').click();
+await tick();
+console.log('COMPANION OK — text selection, Lucide wand, channel entry, no floating toolbar');
+
 // The Harness edition has no note or daily-journal actions.
 for (const label of ['存为 Markdown','阅读笔记','摘录选中文字到工作区日记','导出文章到工作区日记']) {
   if (container.querySelector(`[aria-label="${label}"]`) || button(label)) throw new Error(`legacy note action still visible: ${label}`);
@@ -227,9 +249,36 @@ console.log('NOTELESS HARNESS UI OK');
 container.querySelector('.qrs-settings-button').click();
 for (let i = 0; i < 4; i += 1) await tick();
 if (!text().includes('乔木 RSS 设置')) throw new Error('settings dialog missing');
+if (!text().includes('阅读外观')) throw new Error('reading settings missing');
+const tabs = container.querySelectorAll('.qrs-settings-tabs button');
+if (tabs.length !== 3) throw new Error('settings navigation incomplete');
+button('订阅', container.querySelector('.qrs-settings-tabs')).click();
+await tick();
 if (!text().includes('管理订阅')) throw new Error('subscription manager missing from settings');
 if (!text().includes('导入 OPML')) throw new Error('OPML import missing from settings');
-console.log('SETTINGS OK — origin/AI toggle, subscriptions, OPML');
+button('关于', container.querySelector('.qrs-settings-tabs')).click();
+await tick();
+if (!text().includes('打赏支持') || !container.querySelector('img[alt="向阳乔木打赏二维码"]')) throw new Error('about/support settings missing');
+console.log('SETTINGS OK — reading, subscriptions/OPML, about/support');
+
+// Discovery keeps filtering and the add action within a compact, scrollable list.
+container.querySelector('.qrs-settings-head button[aria-label="关闭设置"]').click();
+await tick();
+container.querySelector('.qrs-channel').click();
+await tick();
+container.querySelector('button[aria-label="探索订阅"]').click();
+await tick();
+const discover = container.querySelector('.qrs-discover');
+if (!discover?.querySelector('.qrs-discover-results')) throw new Error('discovery list missing');
+if (container.querySelector('.qrs-channel-picker')) throw new Error('channel picker overlaps discovery');
+if (discover.querySelectorAll('.qrs-discover-row').length < 10) throw new Error('too few discovery results');
+if (!discover.querySelector('.qrs-discover-row .qrs-discover-add')) throw new Error('feed action is outside its row');
+const featuredTab = [...discover.querySelectorAll('.qrs-discover-categories button')].find((node) => node.textContent === '精选作者');
+featuredTab.click();
+await tick();
+if (discover.querySelectorAll('.qrs-discover-row').length !== 9) throw new Error('featured category did not filter');
+if (discover.querySelector('.qrs-discover-row .qrs-discover-info span')?.textContent.includes('https://')) throw new Error('feed URL is not compact');
+console.log('DISCOVERY OK — compact rows, category filtering, inline action');
 
 console.log('CLIENT RENDER TESTS PASSED');
 process.exit(0);
