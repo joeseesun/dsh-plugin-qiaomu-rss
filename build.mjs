@@ -54,6 +54,7 @@ const footer = `
 
 await esbuild.build({
   entryPoints: [join(here, 'src/client/index.jsx')],
+  loader: { '.css': 'text' },
   bundle: true,
   platform: 'browser',
   format: 'cjs',

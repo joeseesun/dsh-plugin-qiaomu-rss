@@ -1,0 +1,31 @@
+name: 故障报告 / Bug report
+description: 报告可复现的阅读、订阅或伴读问题
+body:
+  - type: markdown
+    attributes:
+      value: 请勿公开粘贴凭证、私人订阅内容或完整 Harness profile。
+  - type: input
+    id: version
+    attributes:
+      label: 插件版本与 Harness 版本 / Versions
+      placeholder: v0.5.0 / 0.2.0-rc.2
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      placeholder: 1. 打开乔木 RSS…
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际结果 / Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 脱敏截图或日志 / Redacted evidence
+      description: 请移除本地路径、私有订阅和个人信息。

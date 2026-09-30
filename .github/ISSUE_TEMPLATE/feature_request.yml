@@ -1,0 +1,16 @@
+name: 功能建议 / Feature request
+description: 建议改进乔木 RSS 的工作流
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: 使用场景 / Use case
+      description: 目前在做什么，哪里不顺畅？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案 / Proposed change
+    validations:
+      required: true

@@ -81,6 +81,8 @@ const ARTICLES = [
 const apiCalls = [];
 const apiArgs = [];
 let generatedOnce = false;
+let delayNextArticle = false;
+let unblockArticle;
 const api = new Proxy({}, {
   get(_target, name) {
     return (...args) => {
@@ -98,14 +100,14 @@ const api = new Proxy({}, {
       if (name === 'listEntries') return Promise.resolve(args[0]?.cursor
         ? { entries: [{ key: 'qiaomu:3', channelName: '乔木博客', title: 'Earlier article', publishedAt: '2026-09-01T10:00:00.000Z', read: true }], hasMore: false }
         : { entries: ARTICLES, hasMore: true, nextCursor: 'older' });
-      if (name === 'getArticle') return Promise.resolve({
+      if (name === 'getArticle') { const result = {
         article: { key: 'qiaomu:1', title: ARTICLES[0].title, titleZh: ARTICLES[0].titleZh, channelName: '乔木博客', url: 'https://example.org/a', author: 'Adam', publishedAt: '2026-09-07T10:00:00.000Z', read: false, favorite: false },
         html: '<p>Full <strong>body</strong> text</p>',
         versions: {
           translation: generatedOnce ? { available: true, source: 'local', markdown: '# 本地译文标题\n\n本地生成的译文正文' } : { available: false, status: 'missing' },
           rewrite: { available: true, source: 'qiaomu', markdown: '# 乔木改写标题\n\n改写正文段落' },
         },
-      });
+      }; return delayNextArticle ? new Promise(resolve => { unblockArticle = () => { delayNextArticle = false; resolve(result); }; }) : Promise.resolve(result); }
       if (name === 'generateVersion') { generatedOnce = true; return Promise.resolve({ title: '本地译文标题', markdown: '# 本地译文标题\n\n本地生成的译文正文', source: 'local' }); }
       if (name === 'saveSettings') return Promise.resolve({ settings: args[0] });
       if (name === 'opmlPreview') return Promise.resolve({ xml: '<opml/>', entries: [{ name: 'New feed', url: 'https://new.example/rss' }, { name: 'Dup', url: 'https://example.org/rss', duplicate: true }] });
@@ -147,7 +149,11 @@ if (!rows[1].querySelector('.qrs-entry-thumb img')) throw new Error('thumbnail m
 console.log('LIST ROWS OK — meta/date, unread+read dots, bookmark, summary, thumbnail');
 
 // ---- open article + reader toolbar ----------------------------------------
+delayNextArticle = true;
 rows[0].click();
+await tick();
+if (!container.querySelector('.qrs-article-loading[aria-label="正在加载文章"]') || container.querySelector('.qrs-welcome')) throw new Error('article skeleton did not replace welcome while loading');
+unblockArticle();
 for (let i = 0; i < 6; i += 1) await tick();
 if (!container.querySelector('.qrs-article h1')?.textContent.includes('研究加速')) throw new Error('article title missing');
 if (!container.querySelector('.qrs-prose')?.textContent.includes('Full')) throw new Error('article body missing');
@@ -200,8 +206,9 @@ search.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
 await tick();
 if (container.querySelectorAll('.qrs-channel-option').length !== 1) throw new Error('picker search did not filter');
 container.querySelectorAll('.qrs-channel-option')[0].click();
-await tick();
+for (let i = 0; i < 3; i += 1) await tick();
 if (localStorage.getItem('qrs.channel') !== 'feed:abc') throw new Error('picker selection did not switch channel');
+if (!apiArgs.some((call) => call.name === 'refresh' && call.args[0]?.channel === 'feed:abc')) throw new Error('empty channel did not refresh automatically');
 console.log('CHANNEL PICKER OK — sections, current marker, search, selection');
 
 // ---- pagination + focus ---------------------------------------------------
@@ -229,6 +236,7 @@ window.getSelection().addRange(range);
 prose.dispatchEvent(new dom.window.MouseEvent('mouseup', { bubbles: true }));
 await tick();
 if (!container.querySelector('.qrs-companion')) throw new Error('selection did not open companion');
+if (!container.querySelector('.qrs-workarea.has-companion .qrs-sidebar')) throw new Error('article list unmounted when companion opened');
 if (container.querySelector('.qrs-selection-bar')) throw new Error('legacy selection toolbar still visible');
 if (!container.querySelector('.qrs-actions .lucide-wand-sparkles')) throw new Error('Lucide wand icon missing');
 container.querySelector('.qrs-reader-toolbar button[aria-label="选择频道"]').click();
@@ -248,18 +256,37 @@ console.log('NOTELESS HARNESS UI OK');
 // ---- settings dialog (subscriptions + OPML) -------------------------------
 container.querySelector('.qrs-settings-button').click();
 for (let i = 0; i < 4; i += 1) await tick();
-if (!text().includes('乔木 RSS 设置')) throw new Error('settings dialog missing');
-if (!text().includes('阅读外观')) throw new Error('reading settings missing');
+if (!container.querySelector('.qrs-settings-page[aria-label="乔木 RSS 设置"]')) throw new Error('settings dialog missing');
+if (!text().includes('文章外观')) throw new Error('reading settings missing');
 const tabs = container.querySelectorAll('.qrs-settings-tabs button');
-if (tabs.length !== 3) throw new Error('settings navigation incomplete');
-button('订阅', container.querySelector('.qrs-settings-tabs')).click();
+if (tabs.length !== 4) throw new Error('settings navigation incomplete');
+button('订阅管理', container.querySelector('.qrs-settings-tabs')).click();
 await tick();
-if (!text().includes('管理订阅')) throw new Error('subscription manager missing from settings');
+if (!container.querySelector('.qrs-subscriptions[aria-label="管理订阅"]')) throw new Error('subscription manager missing from settings');
+if (container.querySelector('.qrs-subscriptions-toolbar').textContent.includes('获取失败')) throw new Error('failed-fetch filter should not appear without failed subscriptions');
 if (!text().includes('导入 OPML')) throw new Error('OPML import missing from settings');
+container.querySelector('button[aria-label="编辑 测试源"]').click();
+await tick();
+if (!container.querySelector('.qrs-subscription-editor[aria-modal="true"] input[aria-label="订阅名称"]')) throw new Error('subscription editor must open as a modal');
+container.querySelector('button[aria-label="关闭编辑"]').click();
+await tick();
+container.querySelector('button[aria-label="编辑分组 AI 与技术"]').click();
+await tick();
+if (!container.querySelector('.qrs-subscription-editor[aria-label="编辑订阅分组"]')) throw new Error('group editor missing');
+container.querySelector('button[aria-label="关闭分组编辑"]').click();
+await tick();
+button('快捷提示词', container.querySelector('.qrs-settings-tabs')).click();
+await tick();
+if (!text().includes('概括要点') || !container.querySelector('.qrs-prompt-manager')) throw new Error('quick prompt management missing');
+container.querySelector('button[aria-label="编辑 概括要点"]').click();
+await tick();
+if (!container.querySelector('.qrs-subscription-editor[aria-label="编辑提示词"] textarea')) throw new Error('prompt editor missing');
+container.querySelector('.qrs-subscription-editor button[aria-label="关闭"]').click();
+await tick();
 button('关于', container.querySelector('.qrs-settings-tabs')).click();
 await tick();
 if (!text().includes('打赏支持') || !container.querySelector('img[alt="向阳乔木打赏二维码"]')) throw new Error('about/support settings missing');
-console.log('SETTINGS OK — reading, subscriptions/OPML, about/support');
+console.log('SETTINGS OK — reading, subscriptions/OPML, quick prompts, about/support');
 
 // Discovery keeps filtering and the add action within a compact, scrollable list.
 container.querySelector('.qrs-settings-head button[aria-label="关闭设置"]').click();
@@ -278,6 +305,11 @@ featuredTab.click();
 await tick();
 if (discover.querySelectorAll('.qrs-discover-row').length !== 9) throw new Error('featured category did not filter');
 if (discover.querySelector('.qrs-discover-row .qrs-discover-info span')?.textContent.includes('https://')) throw new Error('feed URL is not compact');
+const podcastTab = [...discover.querySelectorAll('.qrs-discover-categories button')].find((node) => node.textContent === '播客');
+if (!podcastTab) throw new Error('podcast discovery category missing');
+podcastTab.click();
+await tick();
+if (!discover.textContent.includes('73 个结果') || !discover.querySelector('.qrs-discover-row .qrs-discover-add')) throw new Error('podcast feeds are not available to subscribe');
 console.log('DISCOVERY OK — compact rows, category filtering, inline action');
 
 console.log('CLIENT RENDER TESTS PASSED');

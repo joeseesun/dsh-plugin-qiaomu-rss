@@ -14,13 +14,15 @@ import { ChannelPicker, ChannelMark } from './ChannelPicker.jsx';
 import { ReadingAppearance } from './ReadingAppearance.jsx';
 import { AddFeedDialog } from './dialogs.jsx';
 import { SettingsPage } from './SettingsPage.jsx';
+import { resolveReadingVersion } from './reading-version.js';
 import { SubscriptionManager } from './SubscriptionManager.jsx';
 import { Discover } from './Discover.jsx';
 import { MediaDock } from './MediaDock.jsx';
-import { selectedPassage } from './selection.js';
+import { quoteRange, selectedPassage } from './selection.js';
 import { AskArticle } from './AskArticle.jsx';
 import { youtubeEmbedUrl } from '../video.js';
 import { printArticle } from './print-article.js';
+import REFINEMENTS from './refinements.css';
 
 const PANEL_CSS = `
 .qrs-root{--qrs-bg:var(--dsw-alias-bg-base);--qrs-bg-2:var(--dsw-alias-bg-layer-1);--qrs-fg:var(--dsw-alias-label-primary);--qrs-muted:var(--dsw-alias-label-secondary);--qrs-faint:var(--dsw-alias-label-secondary);--qrs-border:var(--dsw-alias-border-l1);--qrs-border-strong:var(--dsw-alias-border-l2);--qrs-hover:var(--dsw-alias-bg-overlay);--qrs-accent:var(--dsw-alias-brand-primary);--qrs-font-size:19px;--qrs-line-height:1.9;--qrs-article-width:804px;--qrs-list-width:300px;display:flex;flex-direction:column;height:100%;min-width:0;padding:0;color:var(--qrs-fg);background:var(--qrs-bg);outline:none;container-type:inline-size}
@@ -138,7 +140,7 @@ const PANEL_CSS = `
 .qrs-settings-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px}.qrs-settings-head>div{display:flex;align-items:baseline;gap:9px}.qrs-settings-head strong{font-size:18px}.qrs-settings-head span{font-size:12px;color:var(--qrs-muted)}
 .qrs-settings-tabs{display:flex;gap:4px;padding:0 16px 10px;border-bottom:1px solid var(--qrs-border)}.qrs-settings-tabs button{border:0;border-radius:7px;background:transparent;color:var(--qrs-muted);padding:7px 14px;font:inherit;cursor:pointer}.qrs-settings-tabs button[aria-current=page]{background:var(--qrs-bg-2);color:var(--qrs-fg);font-weight:600}
 .qrs-settings-content{flex:1;min-height:0;overflow:auto;padding:18px 22px}.qrs-settings-content section{display:flex;flex-direction:column;gap:14px}.qrs-settings-content h3{font-size:14px;margin:8px 0 0}.qrs-settings-content p{line-height:1.6}.qrs-settings-content .qrs-reading-settings-fields{max-width:500px}.qrs-settings-content .qrs-reading-setting{grid-template-columns:110px minmax(0,1fr) 54px}.qrs-settings-content .qrs-reading-reset{max-width:500px;margin-top:0}.qrs-settings-content .qrs-field{max-width:560px}.qrs-settings-content .qrs-field input[type=url]{width:100%;padding:8px 10px;border:1px solid var(--qrs-border);border-radius:7px;background:var(--qrs-bg);color:var(--qrs-fg);font:inherit}.qrs-settings-ai{margin-top:8px}
-.qrs-settings-content .qrs-modal-row button,.qrs-settings-content button:not(.qrs-icon){border:1px solid var(--qrs-border);border-radius:7px;background:var(--qrs-bg-2);color:var(--qrs-fg);padding:6px 10px;font:inherit;cursor:pointer}.qrs-settings-content .qrs-modal-row{display:flex;gap:8px}.qrs-settings-links{display:flex;flex-wrap:wrap;gap:8px 18px}.qrs-settings-links a{color:var(--qrs-accent);text-decoration:none}.qrs-settings-links a:hover{text-decoration:underline}.qrs-settings-support{display:flex;gap:24px;flex-wrap:wrap;margin-top:12px}.qrs-settings-support>div{min-width:180px}.qrs-settings-support p{margin:4px 0 10px;font-size:12px;color:var(--qrs-muted)}.qrs-settings-support img{display:block;width:160px;height:160px;object-fit:contain;border-radius:8px;background:white}
+.qrs-settings-content .qrs-modal-row button{border:1px solid var(--qrs-border);border-radius:7px;background:var(--qrs-bg-2);color:var(--qrs-fg);padding:6px 10px;font:inherit;cursor:pointer}.qrs-settings-content .qrs-modal-row{display:flex;gap:8px}
 .qrs-settings-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:55px;padding:10px 20px;border-top:1px solid var(--qrs-border);font-size:12px;color:var(--qrs-muted)}.qrs-settings-footer button{border:0;border-radius:7px;background:var(--qrs-accent);color:white;padding:7px 14px;font:inherit;cursor:pointer}.qrs-settings-footer button:disabled{opacity:.5;cursor:default}
 @container (max-width:560px){.qrs-settings-backdrop{padding:0}.qrs-settings-page{width:100%;height:100%;border-radius:0}.qrs-settings-content{padding:16px}.qrs-settings-content .qrs-reading-setting{grid-template-columns:80px minmax(0,1fr) 50px}}
 .qrs-field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--dsw-alias-label-secondary)}
@@ -234,7 +236,7 @@ function ensureStyles() {
   stylesReady = true;
   const style = document.createElement('style');
   style.dataset.plugin = 'dsh-plugin-qiaomu-rss';
-  style.textContent = PANEL_CSS;
+  style.textContent = PANEL_CSS + REFINEMENTS;
   document.head.appendChild(style);
 }
 
@@ -268,8 +270,18 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   const [selected, setSelected] = useState(undefined);
   const [toast, setToast] = useState(undefined);
   const [dialog, setDialog] = useState(undefined);
+  const [settingsEntry, setSettingsEntry] = useState({ tab:'reading', addPrompt:false });
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerAnchor, setPickerAnchor] = useState(null);
   useEffect(() => { if (dialog) setPickerOpen(false); }, [dialog]);
+  const openPicker = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = Math.min(480, window.innerWidth - 24);
+    const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12));
+    const top = Math.max(12, Math.min(rect.bottom + 8, window.innerHeight - 580));
+    setPickerAnchor({ left, top });
+    setPickerOpen(true);
+  };
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -277,6 +289,9 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   const [listWidth, setListWidth] = useState(() => Number(localStorage.getItem('qrs.listWidth')) || 300);
   const [episode, setEpisode] = useState(null);
   const [askContext, setAskContext] = useState(null);
+  const activeChannelRef = useRef(channel);
+  activeChannelRef.current = channel;
+  const automaticRefresh = useRef(new Map());
   const [passage,setPassage]=useState(null);
   const selectionSerial=useRef(0);
   const proseRef=useRef();
@@ -289,6 +304,15 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   useEffect(()=>{const record=selected?.article;if(record)localStorage.setItem('qrs.view.'+channel,JSON.stringify({key:record.key,active:selected.active}));},[selected?.article?.key,selected?.active,channel]);
 
   useEffect(()=>{setPassage(null);},[selected?.article?.key]);
+  useEffect(() => {
+    const highlights = globalThis.CSS?.highlights;
+    const HighlightType = globalThis.Highlight;
+    if (!highlights || !HighlightType) return;
+    const range = passage && proseRef.current ? quoteRange(proseRef.current, passage) : null;
+    if (range) highlights.set('qrs-reading-selection', new HighlightType(range));
+    else highlights.delete('qrs-reading-selection');
+    return () => highlights.delete('qrs-reading-selection');
+  }, [passage, selected?.article?.key, selected?.active]);
 
   const toastTimer = useRef();
   const pageRequest = useRef(0);
@@ -374,13 +398,33 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel, filter, query]);
 
+  useEffect(() => {
+    const entry = channels.find((item) => item.key === channel);
+    if (!entry || (entry.total > 0 && (channel === 'all' || channel === 'feeds:all'))) return;
+    const last = automaticRefresh.current.get(channel) ?? 0;
+    if (Date.now() - last < (entry.total > 0 ? 15 * 60_000 : 60_000)) return;
+    automaticRefresh.current.set(channel, Date.now());
+    let cancelled = false;
+    setRefreshing(true);
+    void api.refresh(channel).then((outcome) => {
+      if (cancelled || activeChannelRef.current !== channel) return;
+      return Promise.all([loadChannels(), loadPage(undefined, true)]).then(() => {
+        if (outcome?.error) setPageError(outcome.error);
+      });
+    }).catch((error) => {
+      if (!cancelled && activeChannelRef.current === channel) setPageError(error?.message ?? String(error));
+    }).finally(() => setRefreshing(false));
+    return () => { cancelled = true; };
+    // Show cached articles immediately, then refresh a scoped channel in the background.
+  }, [channel, channels]);
+
   const openArticle = async (key, restoreVersion) => {
     const request = ++articleRequest.current;
-    setSelected({ loading: true });setPassage(null);if(document.querySelector('.qrs-root')?.clientWidth>0&&document.querySelector('.qrs-root').clientWidth<460)setFocused(true);
+    setSelected({ loading: true, key });setPassage(null);if(document.querySelector('.qrs-root')?.clientWidth>0&&document.querySelector('.qrs-root').clientWidth<460)setFocused(true);
     const data = await run(api.getArticle(key), { errorPrefix: '读取正文失败' });
     if (request !== articleRequest.current) return;
-    if (!data) { setSelected(undefined); return; }
-    setSelected({ ...data, article:{...data.article,read:true}, active: restoreVersion || reading.defaultVersion });document.querySelector('.qrs-reader')?.scrollTo?.({top:0});
+    if (!data) { setSelected({ error: true, key }); return; }
+    setSelected({ ...data, article:{...data.article,read:true}, active: resolveReadingVersion(restoreVersion || reading.defaultVersion, data) });document.querySelector('.qrs-reader')?.scrollTo?.({top:0});
     if (data.article?.read === false) {
       void api.setRead([key], true).catch(e=>notify(e.message,true));
       setPage((previous) => ({ ...previous, entries: previous.entries.map((entry) => (entry.key === key ? { ...entry, read: true } : entry)) }));
@@ -480,26 +524,26 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
     return markdown ? markdownToHtml(markdown) : '';
   }, [activeArticle, active, versions]);
   useEffect(()=>{if(askContext&&activeArticle?.article)setAskContext(previous=>({...previous,key:activeArticle.article.key,title:activeArticle.article.titleZh||activeArticle.article.title,version:active,selection:previous.key===activeArticle.article.key&&previous.version===active?previous.selection:'',quoteId:previous.key===activeArticle.article.key&&previous.version===active?previous.quoteId:undefined}));},[activeArticle?.article?.key,active]);
-  const openCompanion=(quote='')=>{if(!activeArticle)return;setAskContext({key:activeArticle.article.key,title:activeArticle.article.titleZh||activeArticle.article.title,version:active,selection:quote,quoteId:quote?++selectionSerial.current:undefined});};
+  const openCompanion=(quote='')=>{if(!activeArticle)return;setFocused(false);setAskContext({key:activeArticle.article.key,title:activeArticle.article.titleZh||activeArticle.article.title,version:active,selection:quote,quoteId:quote?++selectionSerial.current:undefined});};
   const captureSelection=()=>{const found=selectedPassage(proseRef.current);if(found?.quote===passage?.quote)return;setPassage(found);if(found)openCompanion(found.quote);};
   const theme = reading.readingTheme && reading.readingTheme !== 'auto' ? reading.readingTheme : null;
   const THEME_COLORS = { light: ['#ffffff', '#202124'], paper: ['#f5efdf', '#40382e'], sage: ['#e8eee3', '#29382c'], mist: ['#e7edf2', '#293741'], dark: ['#252525', '#dedede'], black: ['#090909', '#cccccc'] };
 
   return (
-    <div ref={rootRef} className={`qrs-root${focused ? ' qrs-focus' : ''}`} tabIndex={0} data-images={String(reading.showImages !== false)}
+    <div ref={rootRef} className={`qrs-root${focused ? ' qrs-focus' : ''}`} tabIndex={0} data-images={String(reading.showImages !== false)} data-reading-theme={theme ?? 'auto'}
       style={{
         '--qrs-list-width': `${listWidth}px`,
         '--qrs-font-size': `${reading.fontSize}px`,
         '--qrs-line-height': reading.lineHeight,
         '--qrs-article-width': `${reading.fontSize * reading.textWidth + 120}px`,
         '--qrs-font-family': fontStack(reading),
-        ...(theme ? { '--qrs-bg': THEME_COLORS[theme][0], '--qrs-bg-2': THEME_COLORS[theme][0], '--qrs-fg': THEME_COLORS[theme][1] } : {}),
+        ...(theme ? { '--qrs-bg': THEME_COLORS[theme][0], '--qrs-bg-2': THEME_COLORS[theme][0], '--qrs-fg': THEME_COLORS[theme][1], '--qrs-chat-bg':THEME_COLORS[theme][0], '--qrs-chat-fg':THEME_COLORS[theme][1] } : {}),
       }}>
       <div ref={workareaRef} style={{'--qrs-companion-width':`${companionWidth}%`}} className={`qrs-workarea${askContext ? ' has-companion' : ''}`}><div className="qrs-layout">
         <aside className="qrs-sidebar">
           <div className="qrs-sidebar-toolbar">
-            <button type="button" className="qrs-channel" aria-haspopup="dialog" onClick={() => setPickerOpen(true)}>
-              <ChannelMark channel={{ ...(currentChannel ?? { name: '乔木精选' }), icon: currentChannel?.key === 'qiaomu' ? 'sparkles' : currentChannel?.kind === 'feed' ? 'rss' : 'tree-deciduous' }} />
+            <button type="button" className="qrs-channel" aria-haspopup="dialog" aria-expanded={pickerOpen} onClick={openPicker}>
+              <ChannelMark channel={currentChannel ?? { key: 'qiaomu', name: '乔木精选' }} size={26} />
               <span className="qrs-channel-label">{currentChannel?.name ?? '乔木精选'}</span>
               <Icon name="chevron-down" size={13} />
             </button>
@@ -511,7 +555,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
             {[['all', '全部'], ['unread', '未读'], ['favorites', '收藏']].map(([value, label]) => (
               <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>
             ))}
-            <button type="button" className="qrs-settings-button" title="插件设置" aria-label="插件设置" onClick={() => setDialog('settings')}><Icon name="settings" size={15} /></button>
+            <button type="button" className="qrs-settings-button" title="插件设置" aria-label="插件设置" onClick={() => setDialog('settings')}><Icon name="settings" size={17} /></button>
           </div>
           <div className={`qrs-search-box${searchOpen ? '' : ' is-hidden'}`}>
             <input ref={searchInput} type="search" aria-label="搜索文章" placeholder="搜索已加载的文章…" value={query}
@@ -525,7 +569,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
             {pageError && <div className="qrs-empty"><button type="button" onClick={() => void loadPage(undefined, true)}>重试</button></div>}
             {!pageError && loading && page.entries.length === 0 && <div className="qrs-empty">正在加载…</div>}
             {!pageError && !loading && page.entries.length === 0 && (
-              <div className="qrs-empty">{filter === 'favorites' ? '还没有收藏的文章' : filter === 'unread' ? '没有未读文章' : '暂无文章。点击「刷新」拉取最新内容，或用「+」探索订阅。'}</div>
+              <div className="qrs-empty">{filter === 'favorites' ? '还没有收藏的文章' : filter === 'unread' ? '没有未读文章' : refreshing ? '正在获取这个频道的文章…' : '这个频道暂无文章，稍后会自动尝试更新。'}</div>
             )}
             {page.entries.map((entry) => (
               <button key={entry.key} type="button" className={`qrs-entry${selected?.article?.key === entry.key ? ' qrs-selected' : ''}${entry.read ? ' qrs-read' : ''}${entry.summary ? '' : ' qrs-no-summary'}`}
@@ -556,7 +600,20 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
         <div className="qrs-resize" role="separator" aria-orientation="vertical" onPointerDown={startDrag}
           onDoubleClick={() => { setListWidth(300); localStorage.setItem('qrs.listWidth', '300'); }} />
         <section className="qrs-reader" tabIndex={0}>
-          {!activeArticle ? (
+          {selected?.loading ? (
+            <div className="qrs-article-loading" role="status" aria-label="正在加载文章">
+              <div className="qrs-reader-toolbar qrs-skeleton-toolbar" aria-hidden="true"><span className="qrs-skeleton qrs-skeleton-icon" /><span className="qrs-skeleton qrs-skeleton-pill" /><span className="qrs-skeleton qrs-skeleton-icon" /><span className="qrs-skeleton qrs-skeleton-icon" /></div>
+              <div className="qrs-article qrs-article-skeleton" aria-hidden="true">
+                <div className="qrs-skeleton qrs-skeleton-meta" /><div className="qrs-skeleton qrs-skeleton-title" /><div className="qrs-skeleton qrs-skeleton-title short" />
+                <div className="qrs-skeleton-paragraph"><div className="qrs-skeleton" /><div className="qrs-skeleton" /><div className="qrs-skeleton" /></div>
+                <div className="qrs-skeleton-paragraph"><div className="qrs-skeleton" /><div className="qrs-skeleton" /><div className="qrs-skeleton" /></div>
+                <div className="qrs-skeleton-paragraph"><div className="qrs-skeleton" /><div className="qrs-skeleton" /></div>
+              </div>
+              <span className="qrs-visually-hidden">正在加载文章…</span>
+            </div>
+          ) : selected?.error ? (
+            <div className="qrs-article-load-error" role="alert"><Icon name="file-check" size={22} /><h2>文章暂时无法打开</h2><p>请重试读取这篇文章。</p><button type="button" onClick={() => void openArticle(selected.key)}>重新加载</button></div>
+          ) : !activeArticle ? (
             <div className="qrs-welcome">
               <div className="qrs-welcome-brand">QIAOMU RSS</div>
               <h2>在 Harness 里读乔木精选</h2>
@@ -573,7 +630,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
             <>
               <div className="qrs-reader-toolbar">
                 <button type="button" className="qrs-icon" title={askContext ? '选择频道' : focused ? '显示列表' : '专注阅读'} aria-label={askContext ? '选择频道' : focused ? '显示列表' : '专注阅读'}
-                  onClick={() => askContext ? setPickerOpen(true) : setFocused((current) => !current)}><Icon name={askContext ? 'panel-left-open' : focused ? 'panel-left-open' : 'panel-left-close'} /></button>
+                  onClick={(event) => askContext ? openPicker(event) : setFocused((current) => !current)}><Icon name={askContext ? 'panel-left-open' : focused ? 'panel-left-open' : 'panel-left-close'} /></button>
                 <label className="qrs-visually-hidden" htmlFor="qrs-mode">阅读版本</label>
                 <div className="qrs-version-switch"><span aria-hidden="true">版本</span><select id="qrs-mode" className="qrs-mode-select" value={active} onChange={(event) => {setPassage(null);setSelected((current) => ({ ...current, active: event.target.value }));}}>
                   {['original', 'translation', 'rewrite'].map((kind) => {
@@ -605,7 +662,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
                       <button type="button" onClick={() => { setMenuOpen(false); try { printArticle({ title: activeArticle.article.title, url: activeArticle.article.url, version: VERSION_LABELS[active], html: bodyHtml }); } catch (error) { notify(`打印失败：${error?.message ?? String(error)}`, true); } }}><Icon name="file-check" size={15} />打印 / 存为 PDF</button>
                       <button type="button" onClick={() => { setMenuOpen(false); void openArticle(activeArticle.article.key); }}><Icon name="refresh-cw" size={15} />重新加载文章</button>
                       <button type="button" onClick={() => { setMenuOpen(false); setDialog('settings'); }}><Icon name="settings" size={15} />插件设置</button>
-                      <button type="button" onClick={() => { setMenuOpen(false); setPickerOpen(true); }}><Icon name="rss" size={15} />选择频道</button>
+                      <button type="button" onClick={(event) => { setMenuOpen(false); openPicker(event); }}><Icon name="rss" size={15} />选择频道</button>
                     </div>
                   )}
                   {appearanceOpen && <ReadingAppearance settings={reading} onChange={applyReading} onClose={() => setAppearanceOpen(false)} />}
@@ -648,22 +705,21 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
       </div>
       {askContext && <div className="qrs-companion-divider" role="separator" aria-label="调整文章与伴读宽度" aria-orientation="vertical" aria-valuemin={25} aria-valuemax={75} aria-valuenow={companionWidth} tabIndex={0}
         onPointerDown={event=>{event.preventDefault();companionDrag.current=true;event.currentTarget.setPointerCapture(event.pointerId);event.currentTarget.dataset.dragging='true';}}
-        onPointerMove={event=>{if(!companionDrag.current)return;const rect=workareaRef.current?.getBoundingClientRect();if(!rect)return;const vertical=rect.width<=700;const total=vertical?rect.height:rect.width;const span=vertical?rect.bottom-event.clientY:rect.right-event.clientX;const minimum=Math.min(320,total*.3);const amount=Math.max(minimum,Math.min(span,total-minimum));companionWidthRef.current=Math.round(amount/total*100);setCompanionWidth(companionWidthRef.current);}}
+        onPointerMove={event=>{if(!companionDrag.current)return;const area=workareaRef.current;const rect=area?.getBoundingClientRect();if(!rect)return;const vertical=getComputedStyle(area).flexDirection==='column';const total=vertical?rect.height:rect.width;const span=vertical?rect.bottom-event.clientY:rect.right-event.clientX;const minimum=Math.min(320,total*.3);const amount=Math.max(minimum,Math.min(span,total-minimum));companionWidthRef.current=Math.round(amount/total*100);setCompanionWidth(companionWidthRef.current);}}
         onPointerUp={event=>{companionDrag.current=false;event.currentTarget.dataset.dragging='false';localStorage.setItem('qrs.companionWidth',String(companionWidthRef.current));}}
         onPointerCancel={event=>{companionDrag.current=false;event.currentTarget.dataset.dragging='false';}}
         onKeyDown={event=>{const step=event.shiftKey?10:2;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();const next=Math.max(25,Math.min(75,companionWidth+(['ArrowLeft','ArrowUp'].includes(event.key)?step:-step)));companionWidthRef.current=next;setCompanionWidth(next);localStorage.setItem('qrs.companionWidth',String(next));}}}
         onDoubleClick={()=>{companionWidthRef.current=44;setCompanionWidth(44);localStorage.setItem('qrs.companionWidth','44');}} />}
-      {askContext && <AskArticle api={api} context={askContext} SessionProvider={SessionProvider} renderSlot={renderSlot} onClose={() => setAskContext(null)} />}
+      {askContext && <AskArticle api={api} context={askContext} SessionProvider={SessionProvider} renderSlot={renderSlot} onClose={() => setAskContext(null)} onManagePrompts={() => { setSettingsEntry({ tab:'prompts', addPrompt:true }); setDialog('settings'); }} />}
       </div>
-      {selected?.loading && <div className="qrs-toast">正在加载正文…</div>}
       <MediaDock episode={episode} onOpen={openArticle} onClose={() => setEpisode(null)} />
       {pickerOpen && !dialog && (
-        <ChannelPicker channels={channels} current={channel} onClose={() => setPickerOpen(false)}
+        <ChannelPicker channels={channels} current={channel} anchor={pickerAnchor} onClose={() => setPickerOpen(false)}
           onSelect={(key) => {if(key!==channel){articleRequest.current++;setAskContext(null);setFocused(false);setSelected(undefined);setPassage(null);setFilter('all');setQuery('');setChannel(key);}}} onManage={() => { setPickerOpen(false); setDialog('settings'); }} />
       )}
       {dialog === 'discover' && <Discover api={api} onClose={() => setDialog(undefined)} onAdded={loadChannels} />}
       {dialog === 'add' && <AddFeedDialog api={api} onClose={() => setDialog(undefined)} onDone={async () => { await loadChannels(); await loadPage(undefined, true); }} notify={notify} />}
-      {dialog === 'settings' && <SettingsPage api={api} onClose={() => setDialog(undefined)} notify={notify} />}
+      {dialog === 'settings' && <SettingsPage api={api} initialTab={settingsEntry.tab} startAddingPrompt={settingsEntry.addPrompt} onClose={() => { setDialog(undefined); setSettingsEntry({ tab:'reading', addPrompt:false }); }} notify={notify} />}
       {toast && <div className={`qrs-toast${toast.isError ? ' is-error' : ''}`}>{toast.message}</div>}
     </div>
   );

@@ -17,7 +17,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node tests/smoke.mjs && node tests/article-context.mjs && node tests/video.mjs && node tests/render.mjs && node tests/harness-integration.mjs && node tests/companion-draft.mjs"
+    "test": "node tests/smoke.mjs && node tests/article-context.mjs && node tests/video.mjs && node tests/reading-version.mjs && node tests/render.mjs && node tests/harness-integration.mjs && node tests/companion-draft.mjs"
   },
   "main": "lib/index.js",
   "exports": {
@@ -33,6 +33,7 @@
     "README.md",
     "vendor",
     "src/data/independent-blogs.json",
+    "src/data/podcast-feeds.json",
     "cordis.patch.yml",
     "lib"
   ],

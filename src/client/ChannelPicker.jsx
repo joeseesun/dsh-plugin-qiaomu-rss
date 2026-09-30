@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Layers3, Sparkles, Rss, Folder, BookOpen } from 'lucide-react';
 import { Icon } from './icons.jsx';
 
 /** Split host channels into the same sections the original picker shows. */
@@ -9,31 +10,29 @@ export function groupChannels(channels) {
       const subtitle = channel.key === 'qiaomu' ? '乔木精选的高质量内容'
         : channel.key === 'feeds:all' ? `${channels.filter((item) => item.kind === 'feed').length} 个个人订阅源`
           : `${channel.unread} 篇未读`;
-      sections.聚合.push({ ...channel, subtitle, icon: channel.key === 'qiaomu' ? 'sparkles' : channel.key === 'feeds:all' ? 'rss' : 'tree-deciduous' });
+      sections.聚合.push({ ...channel, subtitle });
     } else if (channel.kind === 'qiaomu') {
       sections.乔木频道.push({ ...channel, subtitle: `${channel.total} 篇文章`, monogram: channel.name.trim().slice(0, 1) });
     } else if (channel.key.startsWith('group:')) {
-      sections.订阅分组.push({ ...channel, subtitle: `${channels.filter((item) => item.group === channel.name).length} 个订阅源`, icon: 'folder' });
+      sections.订阅分组.push({ ...channel, subtitle: `${channels.filter((item) => item.group === channel.name).length} 个订阅源` });
     } else {
-      sections.我的订阅源.push({ ...channel, subtitle: channel.lastError ? `获取失败：${channel.lastError}` : channel.url, icon: 'rss', error: Boolean(channel.lastError) });
+      sections.我的订阅源.push({ ...channel, subtitle: channel.lastError ? `获取失败：${channel.lastError}` : channel.url, error: Boolean(channel.lastError) });
     }
   }
   return sections;
 }
 
 export function ChannelMark({ channel, size = 22 }) {
-  const style = {
-    width: size, height: size, flex: `0 0 ${size}px`, display: 'inline-flex', alignItems: 'center',
-    justifyContent: 'center', borderRadius: 7, background: 'color-mix(in srgb, var(--dsw-alias-brand-primary) 12%, var(--dsw-alias-bg-base))',
-    color: 'var(--dsw-alias-brand-primary)', fontSize: 11, fontWeight: 700,
-  };
-  if (channel.monogram) return <span style={style}>{channel.monogram}</span>;
-  return <span style={style}><Icon name={channel.icon ?? 'rss'} size={13} strokeWidth={1.8} /></span>;
+  const key = channel.key ?? '';
+  const IconType = key === 'all' ? Layers3 : key === 'qiaomu' ? Sparkles : key === 'feeds:all' || key.startsWith('feed:') ? Rss : key.startsWith('group:') ? Folder : BookOpen;
+  const variant = key === 'qiaomu' ? ' curated' : key === 'all' ? ' all' : '';
+  return <span className={`qrs-channel-mark${variant}`} style={{ width:size, height:size, flex:`0 0 ${size}px` }} aria-hidden="true">
+    {channel.monogram && key.startsWith('qiaomu:') ? <span>{channel.monogram}</span> : <IconType size={Math.max(16, Math.round(size*.72))} strokeWidth={1.8} />}
+  </span>;
 }
 
-export function ChannelPicker({ channels, current, onSelect, onManage, onClose }) {
+export function ChannelPicker({ channels, current, anchor, onSelect, onManage, onClose }) {
   const [query, setQuery] = useState('');
-  const [expanded, setExpanded] = useState(() => new Set());
   const sections = useMemo(() => groupChannels(channels), [channels]);
   const searching = query.trim() !== '';
   const matches = (channel) => `${channel.name} ${channel.subtitle ?? ''}`.toLowerCase().includes(query.trim().toLowerCase());
@@ -47,7 +46,7 @@ export function ChannelPicker({ channels, current, onSelect, onManage, onClose }
     <div className="qrs-channel-option-wrap" key={channel.key}>
       <button type="button" className="qrs-channel-option" aria-current={channel.key === current}
         onClick={() => { onSelect(channel.key); onClose(); }}>
-        <ChannelMark channel={channel} size={20} />
+        <ChannelMark channel={channel} size={26} />
         <span className="qrs-channel-copy">
           <span className="qrs-channel-name">{channel.name}</span>
           {channel.subtitle && <span className="qrs-channel-subtitle">{channel.subtitle}</span>}
@@ -58,14 +57,10 @@ export function ChannelPicker({ channels, current, onSelect, onManage, onClose }
   );
   return (
     <div className="qrs-channel-backdrop" onClick={onClose}>
-      <div className="qrs-channel-picker" role="dialog" aria-label="选择频道" onClick={(event) => event.stopPropagation()}>
-        <div className="qrs-channel-top">
-          <input type="search" aria-label="搜索频道" placeholder="搜索频道、分组或订阅源…" value={query}
-            onChange={(event) => setQuery(event.target.value)} autoFocus />
-          <button type="button" className="qrs-channel-manage" onClick={onManage}>
-            <Icon name="settings" size={15} />管理订阅
-          </button>
-        </div>
+      <div className="qrs-channel-picker" style={anchor ? { left:anchor.left, top:anchor.top } : undefined} role="dialog" aria-label="选择频道" onClick={(event) => event.stopPropagation()}>
+        <div className="qrs-channel-heading"><div><strong>切换频道</strong><small>选择想读的内容</small></div><button type="button" className="qrs-icon" aria-label="关闭频道列表" onClick={onClose}><Icon name="x" /></button></div>
+        <div className="qrs-channel-top"><Icon name="search" size={16} /><input type="search" aria-label="搜索频道" placeholder="搜索频道、分组或订阅源…" value={query}
+            onChange={(event) => setQuery(event.target.value)} autoFocus /></div>
         <div className="qrs-channel-options">
           {searching
             ? (visible.length ? visible.map(row) : <div className="qrs-channel-empty">没有匹配的频道</div>)
@@ -76,7 +71,9 @@ export function ChannelPicker({ channels, current, onSelect, onManage, onClose }
               </div>
             ))}
         </div>
-        <button type="button" className="qrs-channel-close" onClick={onClose}>关闭</button>
+        <div className="qrs-channel-footer"><button type="button" className="qrs-channel-manage" onClick={onManage}>
+            <Icon name="settings" size={16} />管理订阅<Icon name="chevron-down" size={13} />
+          </button><button type="button" className="qrs-channel-close" onClick={onClose}>完成</button></div>
       </div>
     </div>
   );
