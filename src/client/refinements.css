@@ -109,7 +109,8 @@
 .qrs-companion-selection-chip { flex: none; max-width: 142px; overflow: hidden; text-overflow: ellipsis; padding: 5px 7px; border-radius: 6px; background: color-mix(in srgb, var(--qrs-fg) 5%, var(--qrs-bg)); color: var(--qrs-muted); font-size: 10px; line-height: 1.3; }
 .qrs-companion-prompt-scroll { display: flex; align-items: center; gap: 5px; min-width: 0; flex: 1; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scrollbar-width: none; }
 .qrs-companion-prompt-scroll::-webkit-scrollbar { display: none; }
-.qrs-native-chat .qrs-companion-prompt-strip button { appearance: none; display: inline-flex; align-items: center; justify-content: center; flex: none; min-height: 32px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; box-shadow: none; color: var(--qrs-muted); font: inherit; font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer; transition: background-color .14s ease, color .14s ease; }
+.qrs-native-chat .qrs-companion-prompt-strip button { appearance: none; display: inline-flex; align-items: center; justify-content: center; flex: none; min-height: 34px; padding: 0 11px; border: 0; border-radius: 8px; background: transparent; box-shadow: none; color: var(--qrs-muted); font: inherit; font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer; transition: background-color .14s ease, color .14s ease; }
+.qrs-native-chat .qrs-companion-prompt-strip .qrs-companion-prompt-ghost { background: color-mix(in srgb, var(--qrs-fg) 5%, var(--qrs-bg)); color: var(--qrs-fg); }
 .qrs-native-chat .qrs-companion-prompt-strip button:hover:not(:disabled) { background: color-mix(in srgb, var(--qrs-fg) 7%, var(--qrs-bg)); color: var(--qrs-fg); }
 .qrs-native-chat .qrs-companion-prompt-strip button:active:not(:disabled) { background: color-mix(in srgb, var(--qrs-fg) 11%, var(--qrs-bg)); }
 .qrs-native-chat .qrs-companion-prompt-strip button:focus-visible { outline: 1px solid color-mix(in srgb, var(--qrs-fg) 45%, var(--qrs-bg)); outline-offset: -1px; }
@@ -124,6 +125,7 @@
 .qrs-companion-notice button { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border: 0; border-radius: 5px; background: transparent; color: inherit; cursor: pointer; }
 .qrs-companion-notice button:hover { background: var(--qrs-hover); color: var(--qrs-fg); }
 .qrs-native-chat { position: relative; }
+.qrs-native-chat [data-conversation-scroll] :has(> [data-chat-flow]) { padding-inline: 16px; }
 .qrs-companion-opening { position: absolute; inset: 0 0 172px; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; padding: 18px 24px 0; overflow: hidden; text-align: center; pointer-events: none; color: var(--qrs-fg); }
 .qrs-companion-book { width: 112px; height: 88px; margin-bottom: 22px; color: color-mix(in srgb, var(--qrs-fg) 42%, var(--qrs-bg)); }
 .qrs-companion-book svg { display: block; width: 100%; height: 100%; stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
