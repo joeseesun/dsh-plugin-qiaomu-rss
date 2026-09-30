@@ -33,7 +33,7 @@ const api = {
 const SessionProvider = ({ children }) => children;
 function NativeView() {
   React.useEffect(() => { nativeMounts++; }, []);
-  return React.createElement('div', { 'data-conversation-scroll':'' }, React.createElement('div', { 'data-composer-seat':'' }, '原生对话'));
+  return React.createElement('div', { 'data-content-phase':'hero' }, React.createElement('div', { 'data-conversation-scroll':'' }, React.createElement('div', { 'data-composer-seat':'' }, '原生对话')));
 }
 const renderSlot = () => React.createElement(NativeView);
 const root = createRoot(document.getElementById('root'));
@@ -48,6 +48,13 @@ assert.equal(bound[0].selection, '第一段', 'the model still receives the comp
 assert.ok(!document.querySelector('.qrs-companion-context').textContent.includes('第一段'), 'the header must not repeat selected text');
 assert.ok(document.body.textContent.includes('原生对话'));
 assert.equal(nativeMounts, 1);
+assert.ok(document.querySelector('.qrs-companion-opening')?.textContent.includes('好奇，从这一页开始'), 'an empty native conversation shows the reading invitation');
+document.querySelector('[data-content-phase]').setAttribute('data-content-phase', 'conversation');
+await tick();
+assert.equal(document.querySelector('.qrs-companion-opening'), null, 'the invitation leaves when conversation content appears');
+document.querySelector('[data-content-phase]').setAttribute('data-content-phase', 'hero');
+await tick();
+assert.ok(document.querySelector('.qrs-companion-opening'), 'the invitation returns for a new empty conversation');
 const strip = document.querySelector('.qrs-companion-prompt-strip');
 assert.ok(strip, 'quick prompts should appear above the native composer');
 assert.equal(strip.parentElement.nextElementSibling?.getAttribute('data-composer-seat'), '', 'prompt strip must precede composer seat');

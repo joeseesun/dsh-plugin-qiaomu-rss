@@ -123,6 +123,15 @@
 .qrs-companion-notice { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 16px 0; padding: 9px 11px; border-radius: 8px; background: var(--qrs-bg-2); color: var(--qrs-muted); font-size: 11px; line-height: 1.5; }
 .qrs-companion-notice button { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border: 0; border-radius: 5px; background: transparent; color: inherit; cursor: pointer; }
 .qrs-companion-notice button:hover { background: var(--qrs-hover); color: var(--qrs-fg); }
+.qrs-native-chat { position: relative; }
+.qrs-companion-opening { position: absolute; inset: 0 0 172px; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; padding: 18px 24px 0; overflow: hidden; text-align: center; pointer-events: none; color: var(--qrs-fg); }
+.qrs-companion-book { width: 112px; height: 88px; margin-bottom: 22px; color: color-mix(in srgb, var(--qrs-fg) 42%, var(--qrs-bg)); }
+.qrs-companion-book svg { display: block; width: 100%; height: 100%; stroke: currentColor; stroke-width: 1.35; stroke-linecap: round; stroke-linejoin: round; }
+.qrs-companion-book-spark { color: color-mix(in srgb, #ad7e49 68%, var(--qrs-fg)); stroke: currentColor; }
+.qrs-companion-opening-label { color: color-mix(in srgb, #ad7e49 54%, var(--qrs-muted)); font-size: 11px; font-weight: 600; letter-spacing: .12em; }
+.qrs-companion-opening h2 { margin: 10px 0 0; color: var(--qrs-fg); font-family: 'Songti SC', 'STSong', 'Noto Serif CJK SC', serif; font-size: clamp(20px, 2vw, 26px); font-weight: 600; line-height: 1.5; letter-spacing: .045em; }
+.qrs-companion-opening p { margin: 14px 0 0; color: var(--qrs-muted); font-size: 12px; line-height: 1.9; letter-spacing: .015em; }
+@media (max-height: 660px) { .qrs-companion-book { width: 80px; height: 63px; margin-bottom: 10px; } .qrs-companion-opening p { margin-top: 6px; } }
 /* Harness centers a blank-session Hero. Embedded reading keeps its native composer at the same bottom position as an active conversation. */
 .qrs-native-chat [data-content-phase="hero"] [data-conversation-scroll] { justify-content: flex-end; }
 .qrs-native-chat [data-content-phase="hero"] [data-composer-seat] { position: sticky; bottom: 0; z-index: 7; background: var(--qrs-bg); }

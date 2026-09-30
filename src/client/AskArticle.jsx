@@ -14,6 +14,7 @@ export function AskArticle({ api, context, onClose, onManagePrompts, SessionProv
   const [attachedVersion, setAttachedVersion] = useState(context.version);
   const [prompts, setPrompts] = useState(readQuickPrompts);
   const [promptMount, setPromptMount] = useState(null);
+  const [emptyConversation, setEmptyConversation] = useState(false);
   const [sendingPrompt, setSendingPrompt] = useState(false);
   const chatRoot = useRef(null);
   const sending = useRef(false);
@@ -38,14 +39,16 @@ export function AskArticle({ api, context, onClose, onManagePrompts, SessionProv
     let placed = false;
     const place = () => {
       const seat = root.querySelector('[data-composer-seat]');
-      if (!seat?.parentNode) return;
-      if (mount.nextSibling !== seat) seat.parentNode.insertBefore(mount, seat);
-      if (!placed) { placed = true; setPromptMount(mount); }
+      if (seat?.parentNode) {
+        if (mount.nextSibling !== seat) seat.parentNode.insertBefore(mount, seat);
+        if (!placed) { placed = true; setPromptMount(mount); }
+      }
+      setEmptyConversation(root.querySelector('[data-content-phase]')?.getAttribute('data-content-phase') === 'hero');
     };
     const observer = new MutationObserver(place);
-    observer.observe(root, { childList:true, subtree:true });
+    observer.observe(root, { childList:true, subtree:true, attributes:true, attributeFilter:['data-content-phase'] });
     place();
-    return () => { observer.disconnect(); mount.remove(); setPromptMount(null); };
+    return () => { observer.disconnect(); mount.remove(); setPromptMount(null); setEmptyConversation(false); };
   }, [chat, SessionProvider]);
 
   async function start(fresh = false) {
@@ -121,6 +124,20 @@ export function AskArticle({ api, context, onClose, onManagePrompts, SessionProv
     {!chat && !error && <div className="qrs-companion-loading" role="status">{workspaceId ? '正在打开对话…' : '正在连接默认工作区…'}</div>}
     {chat && SessionProvider && <div className="qrs-native-chat" ref={chatRoot}>
       <SessionProvider session={chat.reference}>{renderSlot('qiaomu-rss.chat', {})}</SessionProvider>
+      {emptyConversation && attached === contextKey && !error && <div className="qrs-companion-opening" aria-label="开始伴读">
+        <div className="qrs-companion-book" aria-hidden="true">
+          <svg viewBox="0 0 112 88" fill="none">
+            <path d="M56 72c-10-7-21-10-37-9V19c16-1 27 2 37 9 10-7 21-10 37-9v44c-16-1-27 2-37 9Z" />
+            <path d="M56 28v44M25 29c9 .3 17 2.5 24 6M25 38c9 .3 17 2.5 24 6M63 35c7-3.5 15-5.7 24-6M63 44c7-3.5 15-5.7 24-6" />
+            <path d="M11 68c18-3 33 0 45 9 12-9 27-12 45-9" />
+            <circle cx="77" cy="13" r="2.5" className="qrs-companion-book-spark" />
+            <path d="M77 3v4M77 19v4M67 13h4M83 13h4" className="qrs-companion-book-spark" />
+          </svg>
+        </div>
+        <span className="qrs-companion-opening-label">与文章对坐片刻</span>
+        <h2>好奇，从这一页开始。</h2>
+        <p>一个细节，一处疑问，或一句不同意的话。<br />写下来，我们接着读。</p>
+      </div>}
     </div>}
     {promptMount && createPortal(<div className="qrs-companion-prompt-strip" role="group" aria-label="快捷提示词">
       {context.selection && attached === contextKey && <span className="qrs-companion-selection-chip" title="选段已加入本次伴读上下文">选段已加入上下文</span>}
