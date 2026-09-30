@@ -11,7 +11,8 @@ export function AskArticle({ api, context, onClose, SessionProvider, renderSlot 
   const owned = useRef(null);
   const generation = useRef(0);
   const started = useRef(false);
-  const contextKey = [context.key, context.version, context.selection || ''].join('|');
+  const insertedQuote = useRef('');
+  const contextKey = [context.key, context.version, context.selection || '', context.quoteId || ''].join('|');
 
   useEffect(() => {
     if (workspaceId) return;
@@ -65,6 +66,17 @@ export function AskArticle({ api, context, onClose, SessionProvider, renderSlot 
       .catch(cause => { if (!stale) setError(cause?.message ?? String(cause)); });
     return () => { stale = true; };
   }, [chat, contextKey]);
+  useEffect(() => {
+    if (!chat || attached !== contextKey || !context.selection || !context.quoteId) return;
+    const id = `${chat.sessionId}:${context.quoteId}`;
+    if (insertedQuote.current === id) return;
+    try {
+      chat.insertContext(`选中文章内容：\n> ${context.selection.replace(/\n/g, '\n> ')}`);
+      insertedQuote.current = id;
+    } catch (cause) {
+      setError(`选文未加入输入框：${cause?.message ?? String(cause)}`);
+    }
+  }, [chat, attached, contextKey]);
 
   return <aside className="qrs-companion" aria-label="AI 伴读">
     <header className="qrs-companion-header">

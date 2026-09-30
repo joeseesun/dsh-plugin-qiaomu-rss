@@ -12,7 +12,8 @@ import { READING_DEFAULTS, fontStack } from '../reading-settings.js';
 import { Icon } from './icons.jsx';
 import { ChannelPicker, ChannelMark } from './ChannelPicker.jsx';
 import { ReadingAppearance } from './ReadingAppearance.jsx';
-import { AddFeedDialog, SettingsDialog } from './dialogs.jsx';
+import { AddFeedDialog } from './dialogs.jsx';
+import { SettingsPage } from './SettingsPage.jsx';
 import { SubscriptionManager } from './SubscriptionManager.jsx';
 import { Discover } from './Discover.jsx';
 import { MediaDock } from './MediaDock.jsx';
@@ -75,7 +76,7 @@ const PANEL_CSS = `
 .qrs-resize:hover{background:var(--qrs-border-strong)}
 .qrs-reader{min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain;position:relative;outline:none;background:var(--qrs-bg)}
 .qrs-reader-toolbar{display:flex;align-items:center;gap:6px;height:44px;padding:5px 12px;position:sticky;top:0;background:var(--qrs-bg);z-index:3}
-.qrs-root .qrs-mode-select{border:0;background:transparent;width:106px;padding:4px 6px;height:30px;font:inherit;font-size:12px;color:var(--qrs-muted);cursor:pointer;outline:none}
+.qrs-version-switch{display:inline-flex;align-items:center;gap:3px;height:30px;padding:0 7px;border:1px solid var(--qrs-border);border-radius:999px;background:var(--qrs-bg-2);color:var(--qrs-muted);font-size:12px;white-space:nowrap}.qrs-version-switch span{font-size:11px}.qrs-root .qrs-mode-select{appearance:none;border:0;background:transparent;width:auto;max-width:110px;padding:3px 1px;height:26px;font:inherit;font-size:12px;color:var(--qrs-fg);cursor:pointer;outline:none}.qrs-version-switch:focus-within{outline:1px solid var(--qrs-accent);outline-offset:1px}
 .qrs-root .qrs-mode-select:disabled{opacity:.6;cursor:default}
 .qrs-reader-nav{display:flex;gap:0;margin-left:10px}
 .qrs-actions{display:flex;align-items:center;gap:2px;margin-left:auto;position:relative}
@@ -132,6 +133,14 @@ const PANEL_CSS = `
 .qrs-modal-actions button,.qrs-modal-row button,.qrs-modal-body button{padding:6px 12px;font:inherit;font-size:13px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2);border:.5px solid var(--dsw-alias-border-l2);border-radius:8px;cursor:pointer}
 .qrs-modal-row{display:flex;gap:8px;flex-wrap:wrap}
 .qrs-modal-note{margin:0;font-size:12px;color:var(--dsw-alias-label-secondary)}
+.qrs-settings-backdrop{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.32)}
+.qrs-settings-page{width:min(820px,100%);height:min(780px,100%);min-height:0;display:flex;flex-direction:column;border:1px solid var(--qrs-border);border-radius:14px;background:var(--dsw-alias-bg-overlay);color:var(--qrs-fg);box-shadow:0 18px 48px rgba(0,0,0,.2);overflow:hidden}
+.qrs-settings-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px}.qrs-settings-head>div{display:flex;align-items:baseline;gap:9px}.qrs-settings-head strong{font-size:18px}.qrs-settings-head span{font-size:12px;color:var(--qrs-muted)}
+.qrs-settings-tabs{display:flex;gap:4px;padding:0 16px 10px;border-bottom:1px solid var(--qrs-border)}.qrs-settings-tabs button{border:0;border-radius:7px;background:transparent;color:var(--qrs-muted);padding:7px 14px;font:inherit;cursor:pointer}.qrs-settings-tabs button[aria-current=page]{background:var(--qrs-bg-2);color:var(--qrs-fg);font-weight:600}
+.qrs-settings-content{flex:1;min-height:0;overflow:auto;padding:18px 22px}.qrs-settings-content section{display:flex;flex-direction:column;gap:14px}.qrs-settings-content h3{font-size:14px;margin:8px 0 0}.qrs-settings-content p{line-height:1.6}.qrs-settings-content .qrs-reading-settings-fields{max-width:500px}.qrs-settings-content .qrs-reading-setting{grid-template-columns:110px minmax(0,1fr) 54px}.qrs-settings-content .qrs-reading-reset{max-width:500px;margin-top:0}.qrs-settings-content .qrs-field{max-width:560px}.qrs-settings-content .qrs-field input[type=url]{width:100%;padding:8px 10px;border:1px solid var(--qrs-border);border-radius:7px;background:var(--qrs-bg);color:var(--qrs-fg);font:inherit}.qrs-settings-ai{margin-top:8px}
+.qrs-settings-content .qrs-modal-row button,.qrs-settings-content button:not(.qrs-icon){border:1px solid var(--qrs-border);border-radius:7px;background:var(--qrs-bg-2);color:var(--qrs-fg);padding:6px 10px;font:inherit;cursor:pointer}.qrs-settings-content .qrs-modal-row{display:flex;gap:8px}.qrs-settings-links{display:flex;flex-wrap:wrap;gap:8px 18px}.qrs-settings-links a{color:var(--qrs-accent);text-decoration:none}.qrs-settings-links a:hover{text-decoration:underline}.qrs-settings-support{display:flex;gap:24px;flex-wrap:wrap;margin-top:12px}.qrs-settings-support>div{min-width:180px}.qrs-settings-support p{margin:4px 0 10px;font-size:12px;color:var(--qrs-muted)}.qrs-settings-support img{display:block;width:160px;height:160px;object-fit:contain;border-radius:8px;background:white}
+.qrs-settings-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:55px;padding:10px 20px;border-top:1px solid var(--qrs-border);font-size:12px;color:var(--qrs-muted)}.qrs-settings-footer button{border:0;border-radius:7px;background:var(--qrs-accent);color:white;padding:7px 14px;font:inherit;cursor:pointer}.qrs-settings-footer button:disabled{opacity:.5;cursor:default}
+@container (max-width:560px){.qrs-settings-backdrop{padding:0}.qrs-settings-page{width:100%;height:100%;border-radius:0}.qrs-settings-content{padding:16px}.qrs-settings-content .qrs-reading-setting{grid-template-columns:80px minmax(0,1fr) 50px}}
 .qrs-field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--dsw-alias-label-secondary)}
 .qrs-field-check{flex-direction:row;align-items:center;gap:8px}
 .qrs-reading-settings{position:absolute;z-index:5;top:100%;right:12px;max-height:calc(100vh - 180px);overflow:auto;width:300px;max-width:calc(100vw - 32px);padding:14px;border:.5px solid var(--dsw-alias-border-l2);border-radius:10px;background:var(--dsw-alias-bg-overlay);color:var(--dsw-alias-label-primary);box-shadow:0 10px 30px rgba(0,0,0,.22)}
@@ -172,6 +181,40 @@ const PANEL_CSS = `
 .qmrss-dialog h3{margin:0;font-size:15px}
 .qmrss-dialog input,.qmrss-dialog select,.qmrss-dialog textarea{width:100%;font:inherit;font-size:13px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-base);border:.5px solid var(--dsw-alias-border-l2);border-radius:8px;padding:7px 10px}
 .qmrss-dialog fieldset{border:.5px solid var(--dsw-alias-border-l1);border-radius:10px;padding:10px;display:grid;gap:8px}
+.qmrss-dialog.qrs-discover{width:min(720px,calc(100vw - 32px));height:min(740px,calc(100vh - 56px));max-height:none;padding:0;gap:0;overflow:hidden;border-radius:16px;box-shadow:0 18px 56px rgba(0,0,0,.18)}
+.qrs-discover-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:23px 26px 16px;flex:none}
+.qrs-discover-head h3{font-size:19px;line-height:1.4;font-weight:650}
+.qrs-discover-head p{margin:4px 0 0;color:var(--dsw-alias-label-secondary);font-size:12px}
+.qrs-discover-head .qrs-icon{margin:-4px -6px 0 0;flex:none}
+.qrs-discover-filters{padding:0 26px 8px;flex:none}
+.qrs-discover-search{display:flex;align-items:center;gap:9px;height:40px;padding:0 12px;background:var(--dsw-alias-bg-layer-2);border:1px solid transparent;border-radius:9px;color:var(--dsw-alias-label-secondary)}
+.qrs-discover-search:focus-within{border-color:var(--dsw-alias-brand-primary)}
+.qrs-discover-search svg{width:16px;height:16px;flex:none}
+.qmrss-dialog .qrs-discover-search input{min-width:0;width:100%;height:100%;padding:0;border:0;background:transparent;outline:0;font-size:13px}
+.qrs-discover-categories{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:14px 0 10px}
+.qrs-discover-categories button{white-space:nowrap;border:0;border-radius:7px;padding:6px 11px;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:13px;cursor:pointer}
+.qrs-discover-categories button:hover{background:var(--dsw-alias-bg-layer-2)}
+.qrs-discover-categories button.active{background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font-weight:600}
+.qrs-discover-filter-line{height:30px;display:flex;justify-content:space-between;align-items:center;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary));font-size:12px}
+.qmrss-dialog .qrs-discover-filter-line select{width:auto;max-width:180px;padding:3px 24px 3px 8px;font-size:12px;border:0;background:transparent;cursor:pointer}
+.qrs-discover-filter-line select:disabled{opacity:.45;cursor:default}
+.qrs-discover-results{overflow-y:auto;min-height:0;flex:1;padding:0 26px}
+.qrs-discover-row{display:flex;align-items:center;gap:12px;min-height:68px;border-bottom:.5px solid var(--dsw-alias-border-l1)}
+.qrs-discover-avatar{display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:9px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);font-size:15px;font-weight:600}
+.qrs-discover-info{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.qrs-discover-info strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600}
+.qrs-discover-info>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dsw-alias-label-secondary);font-size:11px}
+.qrs-discover-dot{padding:0 2px}
+.qrs-discover-add{display:inline-flex;align-items:center;justify-content:center;gap:4px;flex:none;min-width:72px;height:30px;padding:0 10px;border:.5px solid var(--dsw-alias-border-l2);border-radius:7px;background:transparent;color:var(--dsw-alias-label-primary);font:inherit;font-size:12px;cursor:pointer}
+.qrs-discover-add:hover:not(:disabled){background:var(--dsw-alias-bg-layer-2)}
+.qrs-discover-add:disabled{opacity:.5;cursor:default}
+.qrs-discover-add svg{width:13px;height:13px}
+.qrs-discover-more{display:block;margin:14px auto 18px;padding:6px 14px;border:0;background:transparent;color:var(--dsw-alias-brand-primary);font:inherit;font-size:12px;cursor:pointer}
+.qrs-discover-empty{padding:72px 10px;text-align:center;color:var(--dsw-alias-label-secondary);font-size:13px}
+.qrs-discover-foot{flex:none;display:flex;flex-wrap:wrap;gap:4px 12px;justify-content:space-between;border-top:.5px solid var(--dsw-alias-border-l1);padding:10px 26px 14px;color:var(--dsw-alias-label-secondary);font-size:11px;line-height:1.5}
+.qrs-discover-foot a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.qrs-discover-message{width:100%;padding:4px 0;color:var(--dsw-alias-label-primary);font-size:12px}
+@media (max-width:600px){.qmrss-dialog.qrs-discover{height:calc(100vh - 30px)}.qrs-discover-head{padding:18px 18px 13px}.qrs-discover-filters{padding:0 18px 6px}.qrs-discover-results{padding:0 18px}.qrs-discover-foot{padding:10px 18px}.qrs-discover-avatar{width:32px;height:32px}.qrs-discover-row{gap:9px}}
 .qmrss-article{font-size:15px;line-height:1.8}
 .qmrss-article h1{font-size:20px;margin:.2em 0 .6em}
 .qmrss-article p{margin:.7em 0}
@@ -234,6 +277,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   const [episode, setEpisode] = useState(null);
   const [askContext, setAskContext] = useState(null);
   const [passage,setPassage]=useState(null);
+  const selectionSerial=useRef(0);
   const proseRef=useRef();
   const rootRef=useRef();
   const workareaRef=useRef();
@@ -244,7 +288,6 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   useEffect(()=>{const record=selected?.article;if(record)localStorage.setItem('qrs.view.'+channel,JSON.stringify({key:record.key,active:selected.active}));},[selected?.article?.key,selected?.active,channel]);
 
   useEffect(()=>{setPassage(null);},[selected?.article?.key]);
-  useEffect(()=>{const update=()=>{const p=selectedPassage(proseRef.current);if(p)setPassage(p);};document.addEventListener('selectionchange',update);return()=>document.removeEventListener('selectionchange',update);},[]);
 
   const toastTimer = useRef();
   const pageRequest = useRef(0);
@@ -435,7 +478,9 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
     const markdown = versions?.[active]?.markdown;
     return markdown ? markdownToHtml(markdown) : '';
   }, [activeArticle, active, versions]);
-  useEffect(()=>{if(askContext&&activeArticle?.article)setAskContext(previous=>({...previous,key:activeArticle.article.key,title:activeArticle.article.titleZh||activeArticle.article.title,version:active,selection:previous.key===activeArticle.article.key&&previous.version===active?previous.selection:''}));},[activeArticle?.article?.key,active]);
+  useEffect(()=>{if(askContext&&activeArticle?.article)setAskContext(previous=>({...previous,key:activeArticle.article.key,title:activeArticle.article.titleZh||activeArticle.article.title,version:active,selection:previous.key===activeArticle.article.key&&previous.version===active?previous.selection:'',quoteId:previous.key===activeArticle.article.key&&previous.version===active?previous.quoteId:undefined}));},[activeArticle?.article?.key,active]);
+  const openCompanion=(quote='')=>{if(!activeArticle)return;setAskContext({key:activeArticle.article.key,title:activeArticle.article.titleZh||activeArticle.article.title,version:active,selection:quote,quoteId:quote?++selectionSerial.current:undefined});};
+  const captureSelection=()=>{const found=selectedPassage(proseRef.current);if(found?.quote===passage?.quote)return;setPassage(found);if(found)openCompanion(found.quote);};
   const theme = reading.readingTheme && reading.readingTheme !== 'auto' ? reading.readingTheme : null;
   const THEME_COLORS = { light: ['#ffffff', '#202124'], paper: ['#f5efdf', '#40382e'], sage: ['#e8eee3', '#29382c'], mist: ['#e7edf2', '#293741'], dark: ['#252525', '#dedede'], black: ['#090909', '#cccccc'] };
 
@@ -526,15 +571,15 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
           ) : (
             <>
               <div className="qrs-reader-toolbar">
-                <button type="button" className="qrs-icon" title={focused ? '显示列表' : '专注阅读'} aria-label={focused ? '显示列表' : '专注阅读'}
-                  onClick={() => setFocused((current) => !current)}><Icon name={focused ? 'panel-left-open' : 'panel-left-close'} /></button>
+                <button type="button" className="qrs-icon" title={askContext ? '选择频道' : focused ? '显示列表' : '专注阅读'} aria-label={askContext ? '选择频道' : focused ? '显示列表' : '专注阅读'}
+                  onClick={() => askContext ? setPickerOpen(true) : setFocused((current) => !current)}><Icon name={askContext ? 'panel-left-open' : focused ? 'panel-left-open' : 'panel-left-close'} /></button>
                 <label className="qrs-visually-hidden" htmlFor="qrs-mode">阅读版本</label>
-                <select id="qrs-mode" className="qrs-mode-select" value={active} onChange={(event) => {setPassage(null);setSelected((current) => ({ ...current, active: event.target.value }));}}>
+                <div className="qrs-version-switch"><span aria-hidden="true">版本</span><select id="qrs-mode" className="qrs-mode-select" value={active} onChange={(event) => {setPassage(null);setSelected((current) => ({ ...current, active: event.target.value }));}}>
                   {['original', 'translation', 'rewrite'].map((kind) => {
                     const available = kind === 'original' || versions?.[kind]?.available;
                     return <option key={kind} value={kind}>{VERSION_LABELS[kind]}{available ? '' : '（缺失）'}</option>;
                   })}
-                </select>
+                </select><Icon name="chevron-down" size={12} /></div>
                 <div className="qrs-reader-nav">
                   <button type="button" className="qrs-icon" title="上一篇" aria-label="上一篇" onClick={() => navigate(-1)}><Icon name="chevron-up" /></button>
                   <button type="button" className="qrs-icon" title="下一篇" aria-label="下一篇" onClick={() => navigate(1)}><Icon name="chevron-down" /></button>
@@ -547,13 +592,13 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
                     aria-pressed={Boolean(activeArticle.article.read)} onClick={() => void setRead(activeArticle.article.key, !activeArticle.article.read)}>
                     <Icon name={activeArticle.article.read ? 'circle-check' : 'circle'} />
                   </button>
-                  <button type="button" className="qrs-icon" title="AI 伴读" aria-label="AI 伴读" onClick={()=>setAskContext({key:activeArticle.article.key,title:activeArticle.article.title,version:active,selection:passage?.quote??''})}><Icon name="sparkles"/></button>
+                  <button type="button" className="qrs-icon" title="AI 伴读" aria-label="AI 伴读" onClick={()=>openCompanion(passage?.quote??'')}><Icon name="wand-sparkles"/></button>
                   <button type="button" className="qrs-icon" title="更多操作" aria-label="更多操作" aria-expanded={menuOpen}
                     onClick={() => setMenuOpen((open) => !open)}><Icon name="ellipsis" /></button>
                   {menuOpen && (
                     <div className="qrs-menu" role="menu">
                       <button type="button" onClick={() => { setMenuOpen(false); setAppearanceOpen(true); }}><Icon name="type" size={15} />阅读设置</button>
-                      <button type="button" onClick={() => { setMenuOpen(false); setAskContext({ key: activeArticle.article.key, title: activeArticle.article.title, version: active, selection: passage?.quote ?? '' }); }}><Icon name="sparkles" size={15} />问 AI</button>
+                      <button type="button" onClick={() => { setMenuOpen(false); openCompanion(passage?.quote ?? ''); }}><Icon name="wand-sparkles" size={15} />问 AI</button>
                       <hr />
                       {activeArticle.article.url && <button type="button" onClick={() => { setMenuOpen(false); window.open(activeArticle.article.url, '_blank', 'noopener,noreferrer'); }}><Icon name="globe" size={15} />打开原文</button>}
                       <button type="button" onClick={() => { setMenuOpen(false); try { printArticle({ title: activeArticle.article.title, url: activeArticle.article.url, version: VERSION_LABELS[active], html: bodyHtml }); } catch (error) { notify(`打印失败：${error?.message ?? String(error)}`, true); } }}><Icon name="file-check" size={15} />打印 / 存为 PDF</button>
@@ -580,7 +625,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
                     : (activeArticle.article.titleZh ?? activeArticle.article.title)}
                 </h1>
                 {bodyHtml
-                  ? <div ref={proseRef} className="qrs-prose" dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml, { baseUrl: activeArticle.article.url }) }} />
+                  ? <div ref={proseRef} className="qrs-prose" onMouseUp={captureSelection} onKeyUp={captureSelection} dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml, { baseUrl: activeArticle.article.url }) }} />
                   : (
                     <div className="qrs-missing">
                       这个版本还没有内容。
@@ -609,19 +654,15 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
         onDoubleClick={()=>{companionWidthRef.current=44;setCompanionWidth(44);localStorage.setItem('qrs.companionWidth','44');}} />}
       {askContext && <AskArticle api={api} context={askContext} SessionProvider={SessionProvider} renderSlot={renderSlot} onClose={() => setAskContext(null)} />}
       </div>
-      {activeArticle && passage && <div className="qrs-selection-bar" role="toolbar" aria-label="选中段落操作">
-        <button className="qrs-icon" title="问 AI" aria-label="问 AI" onClick={()=>setAskContext({key:activeArticle.article.key,title:activeArticle.article.title,version:active,selection:passage.quote})}><Icon name="sparkles"/></button>
-        <button className="qrs-icon" title="取消选择" aria-label="取消选择" onClick={()=>setPassage(null)}><Icon name="x"/></button>
-      </div>}
       {selected?.loading && <div className="qrs-toast">正在加载正文…</div>}
       <MediaDock episode={episode} onOpen={openArticle} onClose={() => setEpisode(null)} />
       {pickerOpen && (
         <ChannelPicker channels={channels} current={channel} onClose={() => setPickerOpen(false)}
-          onSelect={(key) => {if(key!==channel){articleRequest.current++;setSelected(undefined);setPassage(null);setFilter('all');setQuery('');setChannel(key);}}} onManage={() => { setPickerOpen(false); setDialog('settings'); }} />
+          onSelect={(key) => {if(key!==channel){articleRequest.current++;setAskContext(null);setFocused(false);setSelected(undefined);setPassage(null);setFilter('all');setQuery('');setChannel(key);}}} onManage={() => { setPickerOpen(false); setDialog('settings'); }} />
       )}
       {dialog === 'discover' && <Discover api={api} onClose={() => setDialog(undefined)} onAdded={loadChannels} />}
       {dialog === 'add' && <AddFeedDialog api={api} onClose={() => setDialog(undefined)} onDone={async () => { await loadChannels(); await loadPage(undefined, true); }} notify={notify} />}
-      {dialog === 'settings' && <SettingsDialog api={api} onClose={() => setDialog(undefined)} notify={notify} />}
+      {dialog === 'settings' && <SettingsPage api={api} onClose={() => setDialog(undefined)} notify={notify} />}
       {toast && <div className={`qrs-toast${toast.isError ? ' is-error' : ''}`}>{toast.message}</div>}
     </div>
   );

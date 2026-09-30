@@ -8,11 +8,16 @@
     "type": "git",
     "url": "https://github.com/joeseesun/dsh-plugin-qiaomu-rss.git"
   },
-  "keywords": ["deepseek-harness", "dsh-plugin", "rss", "qiaomu"],
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "rss",
+    "qiaomu"
+  ],
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node tests/smoke.mjs && node tests/article-context.mjs && node tests/video.mjs && node tests/render.mjs && node tests/harness-integration.mjs"
+    "test": "node tests/smoke.mjs && node tests/article-context.mjs && node tests/video.mjs && node tests/render.mjs && node tests/harness-integration.mjs && node tests/companion-draft.mjs"
   },
   "main": "lib/index.js",
   "exports": {
@@ -53,23 +58,36 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.0.4",
-    "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-tools": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-llm": "0.2.0-rc.2",
     "@deepseek-ai/dsh-agent-default-model": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-home-paths": "0.2.0-rc.2"
+    "@deepseek-ai/dsh-home-paths": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-llm": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-tools": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2"
   },
   "peerDependenciesMeta": {
-    "@deepseek-ai/cordis": {"optional": true},
-    "@deepseek-ai/dsh-typert-protocol": {"optional": true},
-    "@deepseek-ai/dsh-tools": {"optional": true},
-    "@deepseek-ai/dsh-llm": {"optional": true},
-    "@deepseek-ai/dsh-agent-default-model": {"optional": true},
-    "@deepseek-ai/dsh-home-paths": {"optional": true}
+    "@deepseek-ai/cordis": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-typert-protocol": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-tools": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-agent-default-model": {
+      "optional": true
+    },
+    "@deepseek-ai/dsh-home-paths": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "esbuild": "^0.28.1",
     "jsdom": "^26.1.0",
+    "lucide-react": "^1.49.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   }

@@ -1,7 +1,4 @@
-import { useEffect, useState } from 'react';
-import { Icon } from './icons.jsx';
-import { SubscriptionManager } from './SubscriptionManager.jsx';
-import { OpmlImport } from './OpmlImport.jsx';
+import { useState } from 'react';
 
 function Modal({ label, onClose, children, wide = false }) {
   return (
@@ -36,79 +33,6 @@ export function AddFeedDialog({ api, onClose, onDone, notify }) {
             notify(`添加失败：${error?.message ?? String(error)}`, true);
           } finally { setBusy(false); }
         }}>{busy ? '订阅中…' : '订阅'}</button>
-      </div>
-    </Modal>
-  );
-}
-
-export function SettingsDialog({ api, onClose, notify }) {
-  const [settings, setSettings] = useState(undefined);
-  const [subscriptions, setSubscriptions] = useState([]);
-  const [origin, setOrigin] = useState('');
-  const [message, setMessage] = useState('');
-  useEffect(() => {
-    void (async () => {
-      try {
-        const settingsResult = await api.getSettings();
-        setSettings(settingsResult.settings);
-        setOrigin(settingsResult.settings.origin ?? '');
-        const list = await api.listSubscriptions();
-        setSubscriptions(list.subscriptions);
-      } catch (error) {
-        notify(`读取设置失败：${error?.message ?? String(error)}`, true);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const reload = async () => {
-    const list = await api.listSubscriptions();
-    setSubscriptions(list.subscriptions);
-  };
-  return (
-    <Modal label="插件设置" onClose={onClose} wide>
-      <div className="qrs-modal-head">
-        <h2>乔木 RSS 设置</h2>
-        <button type="button" onClick={onClose}>完成</button>
-      </div>
-      {settings === undefined ? <p className="qrs-modal-note">正在加载…</p> : (
-        <div className="qrs-modal-body">
-          <label className="qrs-field"><span>乔木服务地址</span>
-            <input aria-label="乔木服务地址" value={origin} onChange={(event) => setOrigin(event.target.value)} />
-          </label>
-          <label className="qrs-field qrs-field-check">
-            <input type="checkbox" checked={settings.aiAssist !== false}
-              onChange={(event) => setSettings({ ...settings, aiAssist: event.target.checked })} />
-            <span>缺失译文／改写时用 Harness 默认模型补全</span>
-          </label>
-          <div className="qrs-modal-row">
-            <button type="button" onClick={async () => {
-              try {
-                await api.opmlExport().then((result) => {
-                  const blob = new Blob([result.xml], { type: 'text/xml' });
-                  const link = document.createElement('a');
-                  link.href = URL.createObjectURL(blob);
-                  link.download = 'qiaomu-rss-subscriptions.opml';
-                  link.click();
-                  URL.revokeObjectURL(link.href);
-                });
-              } catch (error) { setMessage(`导出失败：${error?.message ?? String(error)}`); }
-            }}>导出 OPML</button>
-            <button type="button" onClick={async () => {
-              try {
-                const result = await api.saveSettings({ ...settings, origin: origin.trim() });
-                setSettings(result.settings);
-                window.dispatchEvent(new Event('qrs-settings-changed'));
-                setMessage('设置已保存');
-              } catch (error) { setMessage(`保存失败：${error?.message ?? String(error)}`); }
-            }}>保存设置</button>
-          </div>
-          {message && <p className="qrs-modal-note" role="status">{message}</p>}
-          <OpmlImport api={api} onDone={reload} />
-          <SubscriptionManager api={api} subscriptions={subscriptions} onChange={setSubscriptions} notify={(text, isError) => setMessage(isError ? text : text)} />
-        </div>
-      )}
-      <div className="qrs-modal-actions">
-        <button type="button" onClick={onClose}><Icon name="chevron-down" size={14} />关闭</button>
       </div>
     </Modal>
   );
