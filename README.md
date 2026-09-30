@@ -6,6 +6,12 @@
 
 Read RSS inside DeepSeek Harness and discuss the current article in its native AI conversation.
 
+**[下载 v0.5.1 安装包](https://github.com/joeseesun/qiaomu-rss-dsh/releases/tag/v0.5.1)** · [安装步骤](#安装) · [查看真实界面](#真实界面)
+
+![乔木 RSS：文章列表、原文阅读与真实 AI 伴读回答](docs/screenshots/ai-companion.jpg)
+
+*本机 DeepSeek Harness 桌面构建实拍：打开 Planet Money 文章，发送「概括要点」，右侧原生 AI 对话返回了对应文章的三点概括。*
+
 这是公开源码的社区插件，并非 DeepSeek 官方维护或背书。预构建安装包见 [GitHub Releases](https://github.com/joeseesun/qiaomu-rss-dsh/releases)；目前不发布 npm 包。已在 DeepSeek Harness 0.2.0-rc.2 的 Desktop 和隔离 Web profile 中验证。
 
 ## 能做什么
@@ -17,6 +23,22 @@ Read RSS inside DeepSeek Harness and discuss the current article in its native A
 | AI 伴读 | 点击文章工具栏的魔法棒，或选中正文，右侧直接打开 Harness 原生对话；默认工作区自动连接当前文章，选文全文作为上下文，输入框只显示简短的可编辑引用预览 |
 | 插件设置 | 调整阅读外观和乔木服务地址；用弹窗编辑订阅、重命名或取消分组，管理 OPML 与快捷提示词，并查看关于与打赏信息 |
 | Agent 工具 | 提供频道、文章、搜索、订阅、刷新和阅读版本相关的八个 `rss_*` 工具 |
+
+## 真实界面
+
+截图来自本机已安装的 DeepSeek Harness 桌面开发构建，保留了实际文章、订阅源和操作结果；画面不代表每个 Release 包都已在所有平台验证。
+
+### 阅读与乔木改写
+
+从订阅列表打开播客文章，切换到「乔木改写」阅读。文章图片和正文均来自实际订阅内容。
+
+![乔木 RSS：订阅列表和乔木改写文章](docs/screenshots/reader.jpg)
+
+### 探索订阅
+
+打开「探索订阅」，可按类别查找 RSS 源，并区分已订阅与可添加的频道。
+
+![乔木 RSS：探索订阅中的真实频道和订阅操作](docs/screenshots/discover-subscriptions.jpg)
 
 切换频道时先显示已缓存文章，再自动拉取该频道的新内容；刷新按钮仍可手动强制更新。切换文章时，阅读区用轻量骨架显示加载状态。默认阅读版本仅在当前文章有内容时生效，缺失时自动选择其他已有版本或原文；手动选择缺失版本仍可调用 Harness 生成。文章与伴读之间的分割线可拖动，也可用方向键微调、双击复位。打开伴读时文章列表保持可见，文章左上角也可打开频道列表。伴读输入框上方的快捷提示词可横向滚动点选并直接发送；末端的 + 可直达设置新增提示词。已有手写草稿时不会覆盖或误发。本机个人提示词保存在插件的浏览器存储中，可在设置中编辑。探索订阅包含来自原版乔木 RSS 目录的 73 个播客 RSS 源；订阅后可使用文章中的音频附件播放。插件不提供 Obsidian 式笔记、划线保存或日记写入。
 
@@ -62,6 +84,8 @@ npm test
 <a id="english"></a>
 
 ## English
+
+The [live desktop screenshots](#真实界面) show a real feed, the rewritten reading view, subscription discovery, and an article-specific native AI response from a locally installed development build. [Download v0.5.1](https://github.com/joeseesun/qiaomu-rss-dsh/releases/tag/v0.5.1) or follow the install steps above.
 
 Qiaomu RSS brings curated and personal RSS/Atom feeds into DeepSeek Harness. Read the original, translated, or rewritten article; manage unread items and favorites; import/export OPML; and open a native Harness AI conversation beside the article with its reading context attached. The companion opens directly in the default workspace. The article/chat divider is resizable.
 
