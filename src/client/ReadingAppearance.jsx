@@ -1,8 +1,9 @@
-import { FONTS, TEXT_WIDTHS, READING_DEFAULTS } from '../reading-settings.js';
+import { FONTS, TEXT_WIDTHS, THEMES, READING_DEFAULTS } from '../reading-settings.js';
 
 /** Shared controls for the quick popover and the full plugin settings page. */
-export function ReadingControls({ settings, onChange }) {
+export function ReadingControls({ settings, onChange, variant = 'compact' }) {
   const set = (patch) => onChange(patch);
+  const page = variant === 'page';
   return (
     <>
       <div className="qrs-reading-settings-fields">
@@ -31,32 +32,26 @@ export function ReadingControls({ settings, onChange }) {
           <input type="range" min="1.5" max="2.4" step="0.1" value={settings.lineHeight}
             onChange={(event) => set({ lineHeight: Number(event.target.value) })} />
         </label>
-        <label className="qrs-reading-setting">
+        <div className="qrs-reading-setting">
           <span>版心宽度</span>
-          <select value={settings.textWidth} onChange={(event) => set({ textWidth: Number(event.target.value) })}>
-            {TEXT_WIDTHS.map((width) => <option key={width.value} value={width.value}>{width.label}</option>)}
-          </select>
-        </label>
-        <label className="qrs-reading-setting">
+          {page ? <div className="qrs-segmented qrs-width-options" role="group" aria-label="版心宽度">{TEXT_WIDTHS.map((width) => <button key={width.value} type="button" aria-pressed={settings.textWidth === width.value} onClick={() => set({ textWidth: width.value })}>{width.value}</button>)}</div> :
+            <select aria-label="版心宽度" value={settings.textWidth} onChange={(event) => set({ textWidth: Number(event.target.value) })}>{TEXT_WIDTHS.map((width) => <option key={width.value} value={width.value}>{width.label}</option>)}</select>}
+        </div>
+        <div className="qrs-reading-setting qrs-theme-setting">
           <span>阅读主题</span>
-          <select value={settings.readingTheme} onChange={(event) => set({ readingTheme: event.target.value })}>
-            {[['auto', '跟随应用'], ['light', '明亮'], ['paper', '纸张'], ['sage', '青绿'], ['mist', '雾蓝'], ['dark', '深色'], ['black', '纯黑']]
-              .map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </label>
-        <label className="qrs-reading-setting">
+          {page ? <div className="qrs-theme-options" role="group" aria-label="阅读主题">{[['auto','跟随应用'],['light','明亮'],['paper','纸张'],['sage','青绿'],['mist','雾蓝'],['dark','深色'],['black','纯黑']].map(([value,label]) => <button key={value} type="button" aria-pressed={settings.readingTheme === value} onClick={() => set({ readingTheme:value })}><span className="qrs-theme-swatch" style={{ background: THEMES[value]?.[0] ?? 'linear-gradient(135deg,#f6f6f6 50%,#272727 50%)', color: THEMES[value]?.[1] ?? '#181818' }}>Aa</span><span>{label}</span></button>)}</div> :
+            <select aria-label="阅读主题" value={settings.readingTheme} onChange={(event) => set({ readingTheme: event.target.value })}>{[['auto','跟随应用'],['light','明亮'],['paper','纸张'],['sage','青绿'],['mist','雾蓝'],['dark','深色'],['black','纯黑']].map(([value,label]) => <option key={value} value={value}>{label}</option>)}</select>}
+        </div>
+        <div className="qrs-reading-setting">
           <span>默认版本</span>
-          <select value={settings.defaultVersion} onChange={(event) => set({ defaultVersion: event.target.value })}>
-            <option value="original">原文</option>
-            <option value="translation">译文</option>
-            <option value="rewrite">乔木改写</option>
-          </select>
-        </label>
-        <label className="qrs-reading-setting qrs-reading-setting-check">
+          {page ? <div className="qrs-segmented" role="group" aria-label="默认版本">{[['original','原文'],['translation','译文'],['rewrite','乔木改写']].map(([value,label]) => <button key={value} type="button" aria-pressed={settings.defaultVersion === value} onClick={() => set({ defaultVersion:value })}>{label}</button>)}</div> :
+            <select aria-label="默认版本" value={settings.defaultVersion} onChange={(event) => set({ defaultVersion: event.target.value })}><option value="original">原文</option><option value="translation">译文</option><option value="rewrite">乔木改写</option></select>}
+        </div>
+        <div className="qrs-reading-setting qrs-reading-setting-check">
           <span>文章图片</span>
-          <input type="checkbox" checked={settings.showImages !== false}
-            onChange={(event) => set({ showImages: event.target.checked })} />
-        </label>
+          {page ? <label className="qrs-switch"><input type="checkbox" aria-label="文章图片" checked={settings.showImages !== false} onChange={(event) => set({ showImages: event.target.checked })} /><span aria-hidden="true" /></label> :
+            <input type="checkbox" aria-label="文章图片" checked={settings.showImages !== false} onChange={(event) => set({ showImages: event.target.checked })} />}
+        </div>
       </div>
       <button type="button" className="qrs-reading-reset"
         onClick={() => set({ ...READING_DEFAULTS })}>

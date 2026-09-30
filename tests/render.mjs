@@ -200,8 +200,9 @@ search.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
 await tick();
 if (container.querySelectorAll('.qrs-channel-option').length !== 1) throw new Error('picker search did not filter');
 container.querySelectorAll('.qrs-channel-option')[0].click();
-await tick();
+for (let i = 0; i < 3; i += 1) await tick();
 if (localStorage.getItem('qrs.channel') !== 'feed:abc') throw new Error('picker selection did not switch channel');
+if (!apiArgs.some((call) => call.name === 'refresh' && call.args[0]?.channel === 'feed:abc')) throw new Error('empty channel did not refresh automatically');
 console.log('CHANNEL PICKER OK — sections, current marker, search, selection');
 
 // ---- pagination + focus ---------------------------------------------------
@@ -229,6 +230,7 @@ window.getSelection().addRange(range);
 prose.dispatchEvent(new dom.window.MouseEvent('mouseup', { bubbles: true }));
 await tick();
 if (!container.querySelector('.qrs-companion')) throw new Error('selection did not open companion');
+if (!container.querySelector('.qrs-workarea.has-companion .qrs-sidebar')) throw new Error('article list unmounted when companion opened');
 if (container.querySelector('.qrs-selection-bar')) throw new Error('legacy selection toolbar still visible');
 if (!container.querySelector('.qrs-actions .lucide-wand-sparkles')) throw new Error('Lucide wand icon missing');
 container.querySelector('.qrs-reader-toolbar button[aria-label="选择频道"]').click();
@@ -248,13 +250,13 @@ console.log('NOTELESS HARNESS UI OK');
 // ---- settings dialog (subscriptions + OPML) -------------------------------
 container.querySelector('.qrs-settings-button').click();
 for (let i = 0; i < 4; i += 1) await tick();
-if (!text().includes('乔木 RSS 设置')) throw new Error('settings dialog missing');
-if (!text().includes('阅读外观')) throw new Error('reading settings missing');
+if (!container.querySelector('.qrs-settings-page[aria-label="乔木 RSS 设置"]')) throw new Error('settings dialog missing');
+if (!text().includes('文章外观')) throw new Error('reading settings missing');
 const tabs = container.querySelectorAll('.qrs-settings-tabs button');
 if (tabs.length !== 3) throw new Error('settings navigation incomplete');
-button('订阅', container.querySelector('.qrs-settings-tabs')).click();
+button('订阅管理', container.querySelector('.qrs-settings-tabs')).click();
 await tick();
-if (!text().includes('管理订阅')) throw new Error('subscription manager missing from settings');
+if (!container.querySelector('.qrs-subscriptions[aria-label="管理订阅"]')) throw new Error('subscription manager missing from settings');
 if (!text().includes('导入 OPML')) throw new Error('OPML import missing from settings');
 button('关于', container.querySelector('.qrs-settings-tabs')).click();
 await tick();

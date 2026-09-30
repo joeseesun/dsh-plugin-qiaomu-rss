@@ -1,21 +1,22 @@
 import { useEffect, useState } from 'react';
+import { BookOpen, Rss, Info, Download, Upload, ArrowUpRight, Heart } from 'lucide-react';
 import packageInfo from '../../package.json';
 import { Icon } from './icons.jsx';
 import { ReadingControls } from './ReadingAppearance.jsx';
 import { OpmlImport } from './OpmlImport.jsx';
 import { SubscriptionManager } from './SubscriptionManager.jsx';
 
-const TABS = [['reading', '阅读'], ['sources', '订阅'], ['about', '关于']];
+const TABS = [['reading', '阅读体验', BookOpen], ['sources', '订阅管理', Rss], ['about', '关于', Info]];
 const REWARD_QR = 'https://radio.qiaomu.ai/assets/qiaomu_reward_qr.png';
 const FOLLOW_QR = 'https://radio.qiaomu.ai/assets/qiaomu_wechat_public_account_qr.jpg';
 
-/** The Harness version keeps the original reading, source, and about surfaces. */
 export function SettingsPage({ api, onClose, notify }) {
   const [tab, setTab] = useState('reading');
   const [settings, setSettings] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   useEffect(() => {
     let cancelled = false;
     void Promise.all([api.getSettings(), api.listSubscriptions()]).then(([preferences, feeds]) => {
@@ -53,41 +54,57 @@ export function SettingsPage({ api, onClose, notify }) {
   };
   return <div className="qrs-settings-backdrop" onClick={onClose}>
     <section className="qrs-settings-page" role="dialog" aria-modal="true" aria-label="乔木 RSS 设置" onClick={event => event.stopPropagation()}>
-      <header className="qrs-settings-head"><div><strong>乔木 RSS 设置</strong></div><button type="button" className="qrs-icon" title="关闭设置" aria-label="关闭设置" onClick={onClose}><Icon name="x" /></button></header>
-      <nav className="qrs-settings-tabs" aria-label="设置分类">{TABS.map(([key, label]) => <button key={key} type="button" aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)}>{label}</button>)}</nav>
-      <main className="qrs-settings-content">
-        {!settings && <p role="status">{message || '正在加载设置…'}</p>}
-        {settings && tab === 'reading' && <section aria-label="阅读设置">
-          <h3>阅读外观</h3>
-          <ReadingControls settings={settings} onChange={change} />
-          <label className="qrs-field qrs-field-check qrs-settings-ai"><input type="checkbox" checked={settings.aiAssist !== false} onChange={event => change({ aiAssist: event.target.checked })} /><span>缺失译文或改写时使用 Harness 当前模型补全</span></label>
-          <p className="qrs-modal-note">AI 伴读使用 Harness 的原生会话和默认工作区；对话模型在右侧输入框中选择。</p>
-        </section>}
-        {settings && tab === 'sources' && <section aria-label="订阅设置">
-          <h3>乔木精选</h3>
-          <label className="qrs-field"><span>服务地址</span><input type="url" aria-label="乔木服务地址" value={settings.origin ?? ''} onChange={event => change({ origin: event.target.value })} /></label>
-          <p className="qrs-modal-note">使用兼容的 HTTPS 乔木 RSS 服务；个人订阅源直接在本机读取。</p>
-          <h3>我的订阅</h3>
-          <div className="qrs-modal-row"><button type="button" onClick={() => void exportOpml()}>导出 OPML</button></div>
-          <OpmlImport api={api} onDone={reloadSubscriptions} />
-          <SubscriptionManager api={api} subscriptions={subscriptions} onChange={setSubscriptions} notify={(text, isError) => { setMessage(text); if (isError) notify(text, true); }} />
-        </section>}
-        {tab === 'about' && <section aria-label="关于乔木 RSS">
-          <h3>乔木 RSS for DeepSeek Harness</h3>
-          <p>版本 {packageInfo.version} · GPL-3.0-only</p>
-          <p>在 Harness 里阅读乔木精选与个人 RSS，并直接使用原生 AI 对话伴读文章。阅读数据保存在本机 Harness 目录中。</p>
-          <div className="qrs-settings-links">
-            <a href="https://github.com/joeseesun/dsh-plugin-qiaomu-rss" target="_blank" rel="noopener noreferrer">源码与更新</a>
-            <a href="https://github.com/joeseesun/dsh-plugin-qiaomu-rss/issues" target="_blank" rel="noopener noreferrer">反馈问题</a>
-            <a href="https://qiaomu.ai/" target="_blank" rel="noopener noreferrer">向阳乔木</a>
-            <a href="https://blog.qiaomu.ai/" target="_blank" rel="noopener noreferrer">乔木博客</a>
-          </div>
-          <div className="qrs-settings-support">
-            <div><h3>打赏支持</h3><p>感谢支持乔木持续维护这个插件。</p><img src={REWARD_QR} alt="向阳乔木打赏二维码" loading="lazy" width="160" height="160" referrerPolicy="no-referrer" /></div>
-            <div><h3>关注公众号</h3><p>向阳乔木推荐看</p><img src={FOLLOW_QR} alt="向阳乔木推荐看公众号二维码" loading="lazy" width="160" height="160" referrerPolicy="no-referrer" /></div>
-          </div>
-        </section>}
-      </main>
+      <header className="qrs-settings-head">
+        <div><span>QIAOMU RSS</span><strong>插件设置</strong></div>
+        <button type="button" className="qrs-icon" title="关闭设置" aria-label="关闭设置" onClick={onClose}><Icon name="x" /></button>
+      </header>
+      <div className="qrs-settings-body">
+        <nav className="qrs-settings-tabs" aria-label="设置分类">
+          <span className="qrs-settings-nav-caption">设置</span>
+          {TABS.map(([key, label, TabIcon]) => <button key={key} type="button" aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)}><TabIcon size={17} strokeWidth={1.8} />{label}</button>)}
+        </nav>
+        <main className="qrs-settings-content">
+          {!settings && <p role="status">{message || '正在加载设置…'}</p>}
+          {settings && tab === 'reading' && <section aria-label="阅读设置">
+            <div className="qrs-settings-intro"><h2>阅读体验</h2><p>让文章以你喜欢的节奏和样式呈现。</p></div>
+            <div className="qrs-settings-card qrs-settings-reading-card">
+              <div className="qrs-settings-card-head"><h3>文章外观</h3><p>字体、版心与颜色只影响阅读视图。</p></div>
+              <ReadingControls settings={settings} onChange={change} variant="page" />
+            </div>
+            <div className="qrs-settings-card qrs-settings-toggle-row">
+              <div><h3>AI 补全阅读版本</h3><p>文章缺少译文或乔木改写时，用 Harness 当前模型补全。</p></div>
+              <label className="qrs-switch"><input type="checkbox" aria-label="AI 补全阅读版本" checked={settings.aiAssist !== false} onChange={event => change({ aiAssist: event.target.checked })} /><span aria-hidden="true" /></label>
+            </div>
+            <p className="qrs-settings-hint">AI 伴读使用 Harness 的原生对话与默认工作区。模型可在右侧对话框中切换。</p>
+          </section>}
+          {settings && tab === 'sources' && <section aria-label="订阅设置">
+            <div className="qrs-settings-intro"><h2>订阅管理</h2><p>整理个人订阅源，或迁移现有 OPML 清单。</p></div>
+            <div className="qrs-settings-card">
+              <div className="qrs-settings-card-head"><h3>乔木精选</h3><p>公开内容服务的连接地址。个人订阅仍由本机读取。</p></div>
+              <label className="qrs-settings-url"><span>服务地址</span><input type="url" aria-label="乔木服务地址" value={settings.origin ?? ''} onChange={event => change({ origin: event.target.value })} /></label>
+            </div>
+            <div className="qrs-settings-card qrs-settings-sources-card">
+              <div className="qrs-settings-card-head qrs-settings-source-head"><div><h3>我的订阅</h3><p>{subscriptions.length} 个订阅源</p></div><div className="qrs-settings-source-actions">
+                <button type="button" onClick={() => setShowImport(current => !current)} aria-expanded={showImport}><Upload size={15} />导入 OPML</button>
+                <button type="button" onClick={() => void exportOpml()}><Download size={15} />导出</button>
+              </div></div>
+              {showImport && <div className="qrs-settings-import"><OpmlImport api={api} onDone={async () => { await reloadSubscriptions(); setShowImport(false); }} /></div>}
+              <SubscriptionManager api={api} subscriptions={subscriptions} onChange={setSubscriptions} notify={(text, isError) => { setMessage(text); if (isError) notify(text, true); }} />
+            </div>
+          </section>}
+          {tab === 'about' && <section aria-label="关于乔木 RSS">
+            <div className="qrs-settings-intro"><h2>关于乔木 RSS</h2><p>为 DeepSeek Harness 打造的安静阅读空间。</p></div>
+            <div className="qrs-settings-card qrs-settings-about-card"><div className="qrs-settings-about-brand"><span>乔</span><div><h3>乔木 RSS</h3><p>版本 {packageInfo.version} · GPL-3.0-only</p></div></div><p>阅读乔木精选与个人 RSS，并用 Harness 原生 AI 对话伴读。阅读数据保存在本机 Harness 目录。</p></div>
+            <div className="qrs-settings-card"><div className="qrs-settings-card-head"><h3>项目与反馈</h3></div><div className="qrs-settings-links">
+              {[['源码与更新','https://github.com/joeseesun/dsh-plugin-qiaomu-rss'],['反馈问题','https://github.com/joeseesun/dsh-plugin-qiaomu-rss/issues'],['向阳乔木','https://qiaomu.ai/'],['乔木博客','https://blog.qiaomu.ai/']].map(([label,href]) => <a key={href} href={href} target="_blank" rel="noopener noreferrer">{label}<ArrowUpRight size={15} /></a>)}
+            </div></div>
+            <div className="qrs-settings-support">
+              <div className="qrs-settings-card"><Heart size={18} /><h3>打赏支持</h3><p>感谢支持乔木持续维护这个插件。</p><img src={REWARD_QR} alt="向阳乔木打赏二维码" loading="lazy" width="140" height="140" referrerPolicy="no-referrer" /></div>
+              <div className="qrs-settings-card"><Rss size={18} /><h3>关注公众号</h3><p>向阳乔木推荐看</p><img src={FOLLOW_QR} alt="向阳乔木推荐看公众号二维码" loading="lazy" width="140" height="140" referrerPolicy="no-referrer" /></div>
+            </div>
+          </section>}
+        </main>
+      </div>
       <footer className="qrs-settings-footer"><span role="status">{message}</span>{tab !== 'about' && <button type="button" disabled={!settings || saving} onClick={() => void save()}>{saving ? '保存中…' : '保存设置'}</button>}</footer>
     </section>
   </div>;

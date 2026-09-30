@@ -20,7 +20,7 @@ export function OpmlImport({ api, onDone }) {
   });
   const reset = () => { setPreview(null); setSelected([]); };
   const visible = preview?.entries.filter((entry) => `${entry.name} ${entry.group ?? ''} ${entry.url}`.toLowerCase().includes(query.toLowerCase())) ?? [];
-  return <fieldset disabled={busy} style={{ display:'grid', gap:8 }}>
+  return <fieldset className="qrs-opml-import" disabled={busy}>
     <legend>导入 OPML</legend>
     <input type="file" aria-label="选择 OPML 文件" accept=".opml,.xml,text/xml" onChange={(e) => {
       const file = e.target.files?.[0];
@@ -39,13 +39,13 @@ export function OpmlImport({ api, onDone }) {
         <button type="button" className="qmrss-btn" onClick={() => setSelected(visible.filter((entry) => !entry.duplicate).map((entry) => entry.url))}>选择筛选结果</button>
         <button type="button" className="qmrss-btn" onClick={() => setSelected([])}>清空选择</button>
       </div>
-      <div style={{ maxHeight:200, overflowY:'auto' }}>{visible.map((entry) => <label key={entry.url} style={{ display:'block' }}>
+      <div className="qrs-opml-results">{visible.map((entry) => <label key={entry.url}>
         <input type="checkbox" disabled={entry.duplicate} checked={selected.includes(entry.url)} onChange={(e) => setSelected(e.target.checked ? [...selected,entry.url] : selected.filter((url) => url !== entry.url))} />
         {entry.name || entry.url} {entry.group && ` · ${entry.group}`} {entry.duplicate && '（已订阅）'}
       </label>)}</div>
       <button type="button" className="qmrss-btn" disabled={!selected.length} onClick={() => void run(async () => {
         const result = await api.opmlImport(preview.xml, selected);
-        setMessage(`已导入 ${result.added} 项，跳过 ${result.skipped} 项。刷新订阅以获取文章。`);
+        setMessage(`已导入 ${result.added} 项，跳过 ${result.skipped} 项。进入频道后会自动获取文章。`);
         reset(); await onDone();
       })}>导入所选（{selected.length}）</button>
     </>}
