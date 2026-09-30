@@ -12,9 +12,11 @@ export function SubscriptionManager({ api, subscriptions, onChange, notify }) {
   const [selected, setSelected] = useState([]);
   const [group, setGroup] = useState('');
   const [editing, setEditing] = useState(null);
+  const [editingGroup, setEditingGroup] = useState(null);
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const visible = subscriptions.filter((sub) => (!errorsOnly || sub.lastError) && `${sub.name} ${sub.group ?? ''} ${sub.url}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  const groups = [...new Set(subscriptions.map(sub => sub.group).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'zh-CN'));
   const execute = async (operation) => {
     setBusy(true);
     try { await operation(); } catch (error) { notify(`操作失败：${error?.message ?? String(error)}`, true); }
@@ -61,11 +63,20 @@ export function SubscriptionManager({ api, subscriptions, onChange, notify }) {
       </div>)}
       {!visible.length && <div className="qrs-subscriptions-empty">没有匹配的订阅源</div>}
     </div>
-    {editing && <div className="qrs-subscription-editor" role="dialog" aria-label="编辑订阅">
-      <div><strong>编辑订阅</strong><button type="button" aria-label="关闭编辑" onClick={() => setEditing(null)}><X size={16} /></button></div>
-      <label>名称<input aria-label="订阅名称" value={editing.name} onChange={event => setEditing({ ...editing,name:event.target.value })} /></label>
-      <label>分组<input aria-label="订阅分组" value={editing.group} onChange={event => setEditing({ ...editing,group:event.target.value })} /></label>
-      <div className="qrs-subscription-editor-actions"><button type="button" onClick={() => setEditing(null)}>取消</button><button type="button" disabled={busy || !editing.name.trim()} onClick={() => void execute(async () => { await api.updateSubscription(editing); setEditing(null); notify('订阅已更新'); })}>保存更改</button></div>
+    {groups.length > 0 && <div className="qrs-group-manager"><div className="qrs-group-heading"><strong>订阅分组</strong><span>{groups.length} 个分组</span></div>
+      {groups.map(name => <div className="qrs-group-row" key={name}><Folder size={15} /><span>{name}</span><small>{subscriptions.filter(sub => sub.group === name).length} 个订阅源</small><button type="button" aria-label={`编辑分组 ${name}`} onClick={() => setEditingGroup({ oldName:name, name })}><Pencil size={15} /></button></div>)}
     </div>}
+    {editing && <div className="qrs-subscription-editor-backdrop" onClick={() => setEditing(null)}><form className="qrs-subscription-editor" role="dialog" aria-modal="true" aria-label="编辑订阅" onClick={event => event.stopPropagation()} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); setEditing(null); } }} onSubmit={event => { event.preventDefault(); if (!busy && editing.name.trim()) void execute(async () => { await api.updateSubscription(editing); setEditing(null); notify('订阅已更新'); }); }}>
+      <div><strong>编辑订阅</strong><button type="button" aria-label="关闭编辑" onClick={() => setEditing(null)}><X size={16} /></button></div>
+      <label>名称<input autoFocus aria-label="订阅名称" value={editing.name} onChange={event => setEditing({ ...editing,name:event.target.value })} /></label>
+      <label>分组<input aria-label="订阅分组" list="qrs-existing-groups" value={editing.group} onChange={event => setEditing({ ...editing,group:event.target.value })} /><datalist id="qrs-existing-groups">{groups.map(name => <option key={name} value={name} />)}</datalist></label>
+      <div className="qrs-subscription-editor-actions"><button type="button" onClick={() => setEditing(null)}>取消</button><button type="submit" disabled={busy || !editing.name.trim()}>保存更改</button></div>
+    </form></div>}
+    {editingGroup && <div className="qrs-subscription-editor-backdrop" onClick={() => setEditingGroup(null)}><form className="qrs-subscription-editor" role="dialog" aria-modal="true" aria-label="编辑订阅分组" onClick={event => event.stopPropagation()} onKeyDown={event => { if (event.key === 'Escape') { event.stopPropagation(); setEditingGroup(null); } }} onSubmit={event => { event.preventDefault(); if (busy) return; void execute(async () => { const targets = subscriptions.filter(sub => sub.group === editingGroup.oldName); for (const sub of targets) await api.updateSubscription({ id:sub.id, group:editingGroup.name.trim() }); setEditingGroup(null); notify('分组已更新'); }); }}>
+      <div><strong>编辑分组</strong><button type="button" aria-label="关闭分组编辑" onClick={() => setEditingGroup(null)}><X size={16} /></button></div>
+      <p>修改分组名会移动该分组中的全部订阅源。留空可取消分组，订阅源会保留。</p>
+      <label>分组名称<input autoFocus aria-label="分组名称" value={editingGroup.name} onChange={event => setEditingGroup({ ...editingGroup, name:event.target.value })} /></label>
+      <div className="qrs-subscription-editor-actions"><button type="button" onClick={() => setEditingGroup(null)}>取消</button><button type="submit" disabled={busy || editingGroup.name.trim() === editingGroup.oldName}>保存分组</button></div>
+    </form></div>}
   </section>;
 }

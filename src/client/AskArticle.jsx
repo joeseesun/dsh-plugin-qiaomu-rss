@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from './icons.jsx';
+import { readQuickPrompts } from './quick-prompts.js';
 
 /** Reader on the left; Harness's own conversation stays mounted on the right. */
 export function AskArticle({ api, context, onClose, SessionProvider, renderSlot }) {
@@ -8,6 +9,8 @@ export function AskArticle({ api, context, onClose, SessionProvider, renderSlot 
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(true);
   const [attached, setAttached] = useState('');
+  const [prompts, setPrompts] = useState(readQuickPrompts);
+  const [showPrompts, setShowPrompts] = useState(false);
   const owned = useRef(null);
   const generation = useRef(0);
   const started = useRef(false);
@@ -19,6 +22,7 @@ export function AskArticle({ api, context, onClose, SessionProvider, renderSlot 
     return api.watchChatWorkspaces?.(() => setWorkspaceId(api.defaultChatWorkspace?.()));
   }, [api, workspaceId]);
   useEffect(() => () => { generation.current += 1; owned.current?.release(); }, []);
+  useEffect(() => { const reload = () => setPrompts(readQuickPrompts()); window.addEventListener('qrs-prompts-changed', reload); return () => window.removeEventListener('qrs-prompts-changed', reload); }, []);
 
   async function start(fresh = false) {
     if (!workspaceId) return;
@@ -71,7 +75,9 @@ export function AskArticle({ api, context, onClose, SessionProvider, renderSlot 
     const id = `${chat.sessionId}:${context.quoteId}`;
     if (insertedQuote.current === id) return;
     try {
-      chat.insertContext(`选中文章内容：\n> ${context.selection.replace(/\n/g, '\n> ')}`);
+      const excerpt = context.selection.replace(/\s+/g, ' ').trim();
+      const preview = excerpt.length > 110 ? `${excerpt.slice(0, 110).trimEnd()}…` : excerpt;
+      chat.insertContext(`引用选段：「${preview}」\n\n`);
       insertedQuote.current = id;
     } catch (cause) {
       setError(`选文未加入输入框：${cause?.message ?? String(cause)}`);
@@ -86,9 +92,15 @@ export function AskArticle({ api, context, onClose, SessionProvider, renderSlot 
     </header>
     <div className="qrs-companion-context">
       <strong>{context.title}</strong>
-      <small>{({ original: '原文', translation: '译文', rewrite: '乔木改写' })[context.version]} · {context.selection ? '已选段落' : '当前文章'}</small>
-      {context.selection && <blockquote>{context.selection}</blockquote>}
+      <small>{({ original: '原文', translation: '译文', rewrite: '乔木改写' })[context.version]} · {context.selection ? '选段已关联' : '当前文章'}</small>
     </div>
+    {chat && <div className="qrs-companion-prompts">
+      <button type="button" aria-expanded={showPrompts} onClick={() => setShowPrompts(value => !value)}><Icon name="sparkles" size={15} />快捷提示词<Icon name="chevron-down" size={13} /></button>
+      {showPrompts && <div className="qrs-companion-prompt-menu" role="menu" aria-label="快捷提示词">
+        {prompts.map(item => <button type="button" role="menuitem" key={item.id} title={item.body} onClick={() => { try { chat.insertContext(item.body); setShowPrompts(false); } catch (cause) { setError(`提示词未加入输入框：${cause?.message ?? String(cause)}`); } }}>{item.title}</button>)}
+        {!prompts.length && <span>可在插件设置中添加提示词</span>}
+      </div>}
+    </div>}
     {error && <div className="qrs-companion-error" role="alert">{error}<button type="button" onClick={() => void start()}>重试</button></div>}
     {!chat && !error && <div className="qrs-companion-loading" role="status">{workspaceId ? '正在打开对话…' : '正在连接默认工作区…'}</div>}
     {chat && attached === contextKey && SessionProvider && <div className="qrs-native-chat">

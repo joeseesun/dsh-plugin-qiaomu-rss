@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, Rss, Info, Download, Upload, ArrowUpRight, Heart } from 'lucide-react';
+import { BookOpen, Rss, Info, Download, Upload, ArrowUpRight, Heart, Sparkles } from 'lucide-react';
 import packageInfo from '../../package.json';
 import { Icon } from './icons.jsx';
 import { ReadingControls } from './ReadingAppearance.jsx';
 import { OpmlImport } from './OpmlImport.jsx';
 import { SubscriptionManager } from './SubscriptionManager.jsx';
+import { PromptManager } from './PromptManager.jsx';
 
-const TABS = [['reading', '阅读体验', BookOpen], ['sources', '订阅管理', Rss], ['about', '关于', Info]];
+const TABS = [['reading', '阅读体验', BookOpen], ['sources', '订阅管理', Rss], ['prompts', '快捷提示词', Sparkles], ['about', '关于', Info]];
 const REWARD_QR = 'https://radio.qiaomu.ai/assets/qiaomu_reward_qr.png';
 const FOLLOW_QR = 'https://radio.qiaomu.ai/assets/qiaomu_wechat_public_account_qr.jpg';
 
@@ -92,6 +93,7 @@ export function SettingsPage({ api, onClose, notify }) {
               <SubscriptionManager api={api} subscriptions={subscriptions} onChange={setSubscriptions} notify={(text, isError) => { setMessage(text); if (isError) notify(text, true); }} />
             </div>
           </section>}
+          {tab === 'prompts' && <section aria-label="快捷提示词设置"><div className="qrs-settings-intro"><h2>快捷提示词</h2><p>把常用的阅读提问放在手边。</p></div><div className="qrs-settings-card"><PromptManager notify={setMessage} /></div></section>}
           {tab === 'about' && <section aria-label="关于乔木 RSS">
             <div className="qrs-settings-intro"><h2>关于乔木 RSS</h2><p>为 DeepSeek Harness 打造的安静阅读空间。</p></div>
             <div className="qrs-settings-card qrs-settings-about-card"><div className="qrs-settings-about-brand"><span>乔</span><div><h3>乔木 RSS</h3><p>版本 {packageInfo.version} · GPL-3.0-only</p></div></div><p>阅读乔木精选与个人 RSS，并用 Harness 原生 AI 对话伴读。阅读数据保存在本机 Harness 目录。</p></div>
@@ -105,7 +107,7 @@ export function SettingsPage({ api, onClose, notify }) {
           </section>}
         </main>
       </div>
-      <footer className="qrs-settings-footer"><span role="status">{message}</span>{tab !== 'about' && <button type="button" disabled={!settings || saving} onClick={() => void save()}>{saving ? '保存中…' : '保存设置'}</button>}</footer>
+      <footer className="qrs-settings-footer"><span role="status">{message}</span>{tab === 'reading' || tab === 'sources' ? <button type="button" disabled={!settings || saving} onClick={() => void save()}>{saving ? '保存中…' : '保存设置'}</button> : null}</footer>
     </section>
   </div>;
 }

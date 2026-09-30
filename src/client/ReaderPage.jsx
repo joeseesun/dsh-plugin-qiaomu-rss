@@ -17,7 +17,7 @@ import { SettingsPage } from './SettingsPage.jsx';
 import { SubscriptionManager } from './SubscriptionManager.jsx';
 import { Discover } from './Discover.jsx';
 import { MediaDock } from './MediaDock.jsx';
-import { selectedPassage } from './selection.js';
+import { quoteRange, selectedPassage } from './selection.js';
 import { AskArticle } from './AskArticle.jsx';
 import { youtubeEmbedUrl } from '../video.js';
 import { printArticle } from './print-article.js';
@@ -274,9 +274,9 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   useEffect(() => { if (dialog) setPickerOpen(false); }, [dialog]);
   const openPicker = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const width = Math.min(430, window.innerWidth - 24);
+    const width = Math.min(480, window.innerWidth - 24);
     const left = Math.max(12, Math.min(rect.left, window.innerWidth - width - 12));
-    const top = Math.max(12, Math.min(rect.bottom + 8, window.innerHeight - 540));
+    const top = Math.max(12, Math.min(rect.bottom + 8, window.innerHeight - 580));
     setPickerAnchor({ left, top });
     setPickerOpen(true);
   };
@@ -302,6 +302,15 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   useEffect(()=>{const record=selected?.article;if(record)localStorage.setItem('qrs.view.'+channel,JSON.stringify({key:record.key,active:selected.active}));},[selected?.article?.key,selected?.active,channel]);
 
   useEffect(()=>{setPassage(null);},[selected?.article?.key]);
+  useEffect(() => {
+    const highlights = globalThis.CSS?.highlights;
+    const HighlightType = globalThis.Highlight;
+    if (!highlights || !HighlightType) return;
+    const range = passage && proseRef.current ? quoteRange(proseRef.current, passage) : null;
+    if (range) highlights.set('qrs-reading-selection', new HighlightType(range));
+    else highlights.delete('qrs-reading-selection');
+    return () => highlights.delete('qrs-reading-selection');
+  }, [passage, selected?.article?.key, selected?.active]);
 
   const toastTimer = useRef();
   const pageRequest = useRef(0);
@@ -519,14 +528,14 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   const THEME_COLORS = { light: ['#ffffff', '#202124'], paper: ['#f5efdf', '#40382e'], sage: ['#e8eee3', '#29382c'], mist: ['#e7edf2', '#293741'], dark: ['#252525', '#dedede'], black: ['#090909', '#cccccc'] };
 
   return (
-    <div ref={rootRef} className={`qrs-root${focused ? ' qrs-focus' : ''}`} tabIndex={0} data-images={String(reading.showImages !== false)}
+    <div ref={rootRef} className={`qrs-root${focused ? ' qrs-focus' : ''}`} tabIndex={0} data-images={String(reading.showImages !== false)} data-reading-theme={theme ?? 'auto'}
       style={{
         '--qrs-list-width': `${listWidth}px`,
         '--qrs-font-size': `${reading.fontSize}px`,
         '--qrs-line-height': reading.lineHeight,
         '--qrs-article-width': `${reading.fontSize * reading.textWidth + 120}px`,
         '--qrs-font-family': fontStack(reading),
-        ...(theme ? { '--qrs-bg': THEME_COLORS[theme][0], '--qrs-bg-2': THEME_COLORS[theme][0], '--qrs-fg': THEME_COLORS[theme][1] } : {}),
+        ...(theme ? { '--qrs-bg': THEME_COLORS[theme][0], '--qrs-bg-2': THEME_COLORS[theme][0], '--qrs-fg': THEME_COLORS[theme][1], '--qrs-chat-bg':THEME_COLORS[theme][0], '--qrs-chat-fg':THEME_COLORS[theme][1] } : {}),
       }}>
       <div ref={workareaRef} style={{'--qrs-companion-width':`${companionWidth}%`}} className={`qrs-workarea${askContext ? ' has-companion' : ''}`}><div className="qrs-layout">
         <aside className="qrs-sidebar">
@@ -544,7 +553,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
             {[['all', '全部'], ['unread', '未读'], ['favorites', '收藏']].map(([value, label]) => (
               <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>
             ))}
-            <button type="button" className="qrs-settings-button" title="插件设置" aria-label="插件设置" onClick={() => setDialog('settings')}><Icon name="settings" size={19} /></button>
+            <button type="button" className="qrs-settings-button" title="插件设置" aria-label="插件设置" onClick={() => setDialog('settings')}><Icon name="settings" size={17} /></button>
           </div>
           <div className={`qrs-search-box${searchOpen ? '' : ' is-hidden'}`}>
             <input ref={searchInput} type="search" aria-label="搜索文章" placeholder="搜索已加载的文章…" value={query}

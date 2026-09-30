@@ -253,15 +253,18 @@ for (let i = 0; i < 4; i += 1) await tick();
 if (!container.querySelector('.qrs-settings-page[aria-label="乔木 RSS 设置"]')) throw new Error('settings dialog missing');
 if (!text().includes('文章外观')) throw new Error('reading settings missing');
 const tabs = container.querySelectorAll('.qrs-settings-tabs button');
-if (tabs.length !== 3) throw new Error('settings navigation incomplete');
+if (tabs.length !== 4) throw new Error('settings navigation incomplete');
 button('订阅管理', container.querySelector('.qrs-settings-tabs')).click();
 await tick();
 if (!container.querySelector('.qrs-subscriptions[aria-label="管理订阅"]')) throw new Error('subscription manager missing from settings');
 if (!text().includes('导入 OPML')) throw new Error('OPML import missing from settings');
+button('快捷提示词', container.querySelector('.qrs-settings-tabs')).click();
+await tick();
+if (!text().includes('概括要点') || !container.querySelector('.qrs-prompt-manager')) throw new Error('quick prompt management missing');
 button('关于', container.querySelector('.qrs-settings-tabs')).click();
 await tick();
 if (!text().includes('打赏支持') || !container.querySelector('img[alt="向阳乔木打赏二维码"]')) throw new Error('about/support settings missing');
-console.log('SETTINGS OK — reading, subscriptions/OPML, about/support');
+console.log('SETTINGS OK — reading, subscriptions/OPML, quick prompts, about/support');
 
 // Discovery keeps filtering and the add action within a compact, scrollable list.
 container.querySelector('.qrs-settings-head button[aria-label="关闭设置"]').click();
