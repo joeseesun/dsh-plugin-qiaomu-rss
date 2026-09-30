@@ -3,6 +3,11 @@ import assert from 'node:assert';
 import { parseFeed, parseOpml, buildOpml } from '../src/host/feeds.js';
 import { sanitizeHtml, htmlToText, firstImageUrl } from '../src/host/sanitize.js';
 import { markdownToHtml, htmlToMarkdown } from '../src/host/markdown.js';
+import { chooseReadingContextVersion } from '../src/host/reading-context-version.js';
+
+assert.equal(chooseReadingContextVersion('translation', { translation:{content:''}, rewrite:{content:'改写正文'}, original:{content:'Original'} }), 'rewrite');
+assert.equal(chooseReadingContextVersion('rewrite', { rewrite:{content:'  '}, original:{content:'Original'} }), 'original');
+assert.equal(chooseReadingContextVersion('original', { original:{content:''} }), undefined);
 
 const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/">

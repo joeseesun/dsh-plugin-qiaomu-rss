@@ -105,15 +105,63 @@
 .qrs-companion-context { padding: 11px 16px; border-bottom-color: color-mix(in srgb, var(--qrs-fg) 9%, var(--qrs-bg)); color: var(--qrs-muted); }
 .qrs-companion-context strong { color: var(--qrs-fg); font-size: 12px; }
 .qrs-companion-prompt-anchor { min-width: 0; width: 100%; flex: none; }
-.qrs-companion-prompt-strip { display: flex; align-items: center; gap: 5px; min-width: 0; width: 100%; padding: 7px 14px 8px; white-space: nowrap; }
+.qrs-companion-prompt-strip { display: flex; align-items: center; gap: 5px; min-width: 0; width: 100%; padding: 7px 14px 8px; white-space: nowrap; color: var(--qrs-fg); }
+.qrs-companion-selection-chip { flex: none; max-width: 142px; overflow: hidden; text-overflow: ellipsis; padding: 5px 7px; border-radius: 6px; background: color-mix(in srgb, var(--qrs-fg) 5%, var(--qrs-bg)); color: var(--qrs-muted); font-size: 10px; line-height: 1.3; }
 .qrs-companion-prompt-scroll { display: flex; align-items: center; gap: 5px; min-width: 0; flex: 1; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scrollbar-width: none; }
 .qrs-companion-prompt-scroll::-webkit-scrollbar { display: none; }
-.qrs-companion-prompt-strip button { flex: none; min-height: 30px; padding: 5px 9px; border: 0; border-radius: 7px; background: transparent; color: var(--qrs-muted); font: inherit; font-size: 11px; line-height: 1.3; cursor: pointer; }
-.qrs-companion-prompt-strip .qrs-companion-add-prompt { display: grid; place-items: center; width: 30px; padding: 0; border: 1px solid var(--qrs-border); color: var(--qrs-fg); }
-.qrs-companion-prompt-strip button:hover { background: color-mix(in srgb, var(--qrs-fg) 6%, var(--qrs-bg)); color: var(--qrs-fg); }
-.qrs-companion-prompt-strip button:active { background: color-mix(in srgb, var(--qrs-fg) 10%, var(--qrs-bg)); }
-.qrs-companion-prompt-strip button:focus-visible { outline: 1px solid color-mix(in srgb, var(--qrs-fg) 40%, var(--qrs-bg)); outline-offset: -1px; }
-.qrs-companion-prompt-strip button:disabled { opacity: .45; cursor: progress; }
+.qrs-native-chat .qrs-companion-prompt-strip button { appearance: none; display: inline-flex; align-items: center; justify-content: center; flex: none; min-height: 32px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; box-shadow: none; color: var(--qrs-muted); font: inherit; font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer; transition: background-color .14s ease, color .14s ease; }
+.qrs-native-chat .qrs-companion-prompt-strip button:hover:not(:disabled) { background: color-mix(in srgb, var(--qrs-fg) 7%, var(--qrs-bg)); color: var(--qrs-fg); }
+.qrs-native-chat .qrs-companion-prompt-strip button:active:not(:disabled) { background: color-mix(in srgb, var(--qrs-fg) 11%, var(--qrs-bg)); }
+.qrs-native-chat .qrs-companion-prompt-strip button:focus-visible { outline: 1px solid color-mix(in srgb, var(--qrs-fg) 45%, var(--qrs-bg)); outline-offset: -1px; }
+.qrs-native-chat .qrs-companion-prompt-strip button:disabled { opacity: .45; cursor: not-allowed; }
+.qrs-native-chat .qrs-companion-prompt-strip .qrs-companion-add-prompt { width: 32px; padding: 0; }
+.qrs-companion-error { margin: 20px 16px; padding: 18px; border: 1px solid var(--qrs-border); border-radius: 12px; background: var(--qrs-bg-2); color: var(--qrs-fg); }
+.qrs-companion-error strong { display: block; font-size: 13px; font-weight: 600; }
+.qrs-companion-error p { margin: 7px 0 14px; color: var(--qrs-muted); font-size: 12px; line-height: 1.6; }
+.qrs-companion-error button { margin: 0; min-height: 32px; padding: 0 11px; border: 1px solid var(--qrs-border); border-radius: 7px; background: var(--qrs-bg); color: var(--qrs-fg); font: inherit; font-size: 12px; cursor: pointer; }
+.qrs-companion-error button:hover { background: var(--qrs-hover); }
+.qrs-companion-notice { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 16px 0; padding: 9px 11px; border-radius: 8px; background: var(--qrs-bg-2); color: var(--qrs-muted); font-size: 11px; line-height: 1.5; }
+.qrs-companion-notice button { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border: 0; border-radius: 5px; background: transparent; color: inherit; cursor: pointer; }
+.qrs-companion-notice button:hover { background: var(--qrs-hover); color: var(--qrs-fg); }
+/* Harness centers a blank-session Hero. Embedded reading keeps its native composer at the same bottom position as an active conversation. */
+.qrs-native-chat [data-content-phase="hero"] [data-conversation-scroll] { justify-content: flex-end; }
+.qrs-native-chat [data-content-phase="hero"] [data-composer-seat] { position: sticky; bottom: 0; z-index: 7; background: var(--qrs-bg); }
+.qrs-native-chat [data-content-phase="hero"] [class*="composerHero"] { padding-bottom: 0; }
+.qrs-native-chat [data-content-phase="hero"] [class*="composerHero"] > :first-child,
+.qrs-native-chat [data-content-phase="hero"] [class*="heroWorkspaceRow"] { display: none; }
+.qrs-discover-actions { display: flex; align-items: center; flex: none; gap: 8px; }
+.qrs-discover-read { min-height: 32px; padding: 0 11px; border: 0; border-radius: 7px; background: transparent; color: var(--qrs-fg); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.qrs-discover-read:hover { background: var(--qrs-hover); }
+.qrs-discover-subscribed { color: var(--qrs-muted); font-size: 11px; white-space: nowrap; }
+
+/* The subscription library uses the active reading palette, including focus and hover states. */
+.qrs-root .qmrss-dialog.qrs-discover {
+  --qrs-discover-tint: color-mix(in srgb, var(--qrs-fg) 3%, var(--qrs-bg));
+  --qrs-discover-hover: color-mix(in srgb, var(--qrs-fg) 5%, var(--qrs-bg));
+  background: var(--qrs-bg); color: var(--qrs-fg);
+  border: 1px solid color-mix(in srgb, var(--qrs-fg) 12%, var(--qrs-bg));
+  box-shadow: 0 18px 55px rgba(0,0,0,.16), 0 1px 2px rgba(0,0,0,.05);
+}
+.qrs-discover-head p, .qrs-discover-info > span, .qrs-discover-filter-line, .qrs-discover-foot { color: var(--qrs-muted); }
+.qrs-root .qrs-discover-search { height: 44px; background: var(--qrs-discover-tint); border: 1px solid color-mix(in srgb, var(--qrs-fg) 12%, var(--qrs-bg)); color: var(--qrs-muted); transition: border-color .14s ease, background-color .14s ease; }
+.qrs-root .qrs-discover-search:focus-within { border-color: color-mix(in srgb, var(--qrs-fg) 45%, var(--qrs-bg)); background: var(--qrs-bg); box-shadow: none; outline: none; }
+.qrs-root .qmrss-dialog .qrs-discover-search input, .qrs-root .qmrss-dialog .qrs-discover-search input:focus-visible { min-width: 0; height: 100%; padding: 0; border: 0 !important; border-radius: 0; background: transparent !important; box-shadow: none !important; outline: none !important; color: var(--qrs-fg); }
+.qrs-root .qmrss-dialog .qrs-discover-search input::placeholder { color: var(--qrs-muted); opacity: .8; }
+.qrs-root .qrs-discover-categories button { min-height: 34px; color: var(--qrs-muted); }
+.qrs-root .qrs-discover-categories button:hover { background: var(--qrs-discover-hover); color: var(--qrs-fg); }
+.qrs-root .qrs-discover-categories button.active, .qrs-root .qrs-discover-categories button.active:hover { background: color-mix(in srgb, var(--qrs-fg) 8%, var(--qrs-bg)); color: var(--qrs-fg); }
+.qrs-root .qmrss-dialog .qrs-discover-filter-line select { min-height: 32px; color: var(--qrs-fg); }
+.qrs-root .qmrss-dialog .qrs-discover-filter-line select:hover:not(:disabled) { background: var(--qrs-discover-hover); }
+.qrs-root .qrs-discover-row { border-bottom: 1px solid color-mix(in srgb, var(--qrs-fg) 9%, var(--qrs-bg)); transition: background-color .14s ease; }
+.qrs-root .qrs-discover-row:hover, .qrs-root .qrs-discover-row:focus-within { background: var(--qrs-discover-tint); }
+.qrs-root .qrs-discover-avatar { background: color-mix(in srgb, var(--qrs-fg) 6%, var(--qrs-bg)); color: var(--qrs-muted); }
+.qrs-root .qrs-discover-add { min-height: 34px; border-color: color-mix(in srgb, var(--qrs-fg) 16%, var(--qrs-bg)); color: var(--qrs-fg); }
+.qrs-root .qrs-discover-add:hover:not(:disabled), .qrs-root .qrs-discover-read:hover { background: var(--qrs-discover-hover); }
+.qrs-root .qrs-discover-foot { border-top: 1px solid color-mix(in srgb, var(--qrs-fg) 10%, var(--qrs-bg)); background: var(--qrs-discover-tint); }
+.qrs-root .qrs-discover-results { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--qrs-fg) 20%, transparent) transparent; }
+.qrs-root .qrs-discover-results::-webkit-scrollbar { width: 6px; }
+.qrs-root .qrs-discover-results::-webkit-scrollbar-thumb { border-radius: 99px; background: color-mix(in srgb, var(--qrs-fg) 20%, transparent); }
+@media (prefers-reduced-motion: reduce) { .qrs-native-chat .qrs-companion-prompt-strip button, .qrs-root .qrs-discover-row, .qrs-root .qrs-discover-search { transition: none; } }
 .qrs-native-chat :is(textarea,[contenteditable=true],[role=textbox]) { color: var(--qrs-fg); }
 .qrs-native-chat button[aria-label="发送消息"] { background: var(--qrs-fg); color: var(--qrs-bg); }
 .qrs-native-chat button[aria-label="发送消息"]:hover { background: color-mix(in srgb, var(--qrs-fg) 83%, var(--qrs-bg)); color: var(--qrs-bg); }

@@ -22,6 +22,7 @@ const tick = () => new Promise(resolveTick => setTimeout(resolveTick, 20));
 const inserted = [];
 const sent = [];
 const bound = [];
+let nativeMounts = 0;
 let managedPrompts = 0;
 const chat = { sessionId: 'session-1', reference: {}, release() {}, insertContext(text) { inserted.push(text); }, async sendPrompt(text, allowed) { sent.push({ text, allowed }); } };
 const api = {
@@ -30,7 +31,11 @@ const api = {
   setReadingContext: async context => { bound.push(context); },
 };
 const SessionProvider = ({ children }) => children;
-const renderSlot = () => React.createElement('div', { 'data-conversation-scroll':'' }, React.createElement('div', { 'data-composer-seat':'' }, '原生对话'));
+function NativeView() {
+  React.useEffect(() => { nativeMounts++; }, []);
+  return React.createElement('div', { 'data-conversation-scroll':'' }, React.createElement('div', { 'data-composer-seat':'' }, '原生对话'));
+}
+const renderSlot = () => React.createElement(NativeView);
 const root = createRoot(document.getElementById('root'));
 const render = context => root.render(React.createElement(AskArticle, {
   api, context, SessionProvider, renderSlot, onClose() {}, onManagePrompts() { managedPrompts++; },
@@ -38,33 +43,34 @@ const render = context => root.render(React.createElement(AskArticle, {
 render({ key: 'article-1', title: '文章', version: 'original', selection: '第一段', quoteId: 1 });
 for (let i = 0; i < 6; i++) await tick();
 assert.equal(bound.length, 1);
-assert.equal(inserted.length, 1);
-assert.ok(inserted[0].includes('引用选段：「第一段」'));
+assert.equal(inserted.length, 0, 'selection must not fill the native composer');
 assert.equal(bound[0].selection, '第一段', 'the model still receives the complete selection');
 assert.ok(!document.querySelector('.qrs-companion-context').textContent.includes('第一段'), 'the header must not repeat selected text');
 assert.ok(document.body.textContent.includes('原生对话'));
+assert.equal(nativeMounts, 1);
 const strip = document.querySelector('.qrs-companion-prompt-strip');
 assert.ok(strip, 'quick prompts should appear above the native composer');
 assert.equal(strip.parentElement.nextElementSibling?.getAttribute('data-composer-seat'), '', 'prompt strip must precede composer seat');
+assert.equal(strip.querySelector('.qrs-companion-selection-chip')?.textContent, '选段已加入上下文');
 strip.querySelector('[aria-label="新增快捷提示词"]').click();
 assert.equal(managedPrompts, 1, 'the trailing plus opens quick prompt management');
 strip.querySelector('button').click();
 await tick();
 assert.ok(sent[0].text.includes('三点概括'), 'quick prompt sends directly');
-assert.ok(sent[0].allowed.includes('引用选段'), 'only the generated selection preview may be replaced');
+assert.equal(sent[0].allowed, undefined, 'quick prompt does not replace a composer draft');
 render({ key: 'article-1', title: '文章', version: 'original', selection: '第一段', quoteId: 1 });
 await tick();
-assert.equal(inserted.length, 1, 'a rerender must not duplicate the selected quote');
+assert.equal(inserted.length, 0, 'a rerender must not write into the composer');
 render({ key: 'article-1', title: '文章', version: 'original', selection: '第二段', quoteId: 2 });
 for (let i = 0; i < 4; i++) await tick();
 assert.equal(bound.length, 2);
-assert.equal(inserted.length, 2);
-assert.ok(inserted[1].includes('引用选段：「第二段」'));
+assert.equal(inserted.length, 0);
+assert.equal(nativeMounts, 1, 'selecting another passage must preserve the native conversation');
+assert.equal(bound.at(-1).selection, '第二段');
 const longSelection = '一段很长的文章内容'.repeat(30);
 render({ key: 'article-1', title: '文章', version: 'original', selection: longSelection, quoteId: 3 });
 for (let i = 0; i < 4; i++) await tick();
 assert.equal(bound.at(-1).selection, longSelection);
-assert.ok(inserted.at(-1).length < 140, 'the visible draft should only contain a short excerpt');
-assert.ok(inserted.at(-1).includes('…'));
+assert.equal(inserted.length, 0, 'even a long selection stays exclusively in reading context');
 root.unmount();
-console.log('Companion draft: complete quote stays in context, compact excerpt enters composer once');
+console.log('Companion draft: complete selection stays in context and leaves composer untouched');

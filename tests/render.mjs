@@ -94,9 +94,10 @@ const api = new Proxy({}, {
         { key: 'feeds:all', kind: 'aggregate', name: '我的订阅', unread: 0, total: 0 },
         { key: 'group:AI 与技术', kind: 'aggregate', name: 'AI 与技术', unread: 0, total: 0 },
         { key: 'feed:abc', kind: 'feed', name: '测试源', group: 'AI 与技术', url: 'https://example.org/rss', unread: 0, total: 0 },
+        { key: 'feed:featured', kind: 'feed', name: '潮流周刊 · Tw93', url: 'https://weekly.tw93.fun/rss.xml', unread: 0, total: 2 },
       ] });
       if (name === 'getSettings') return Promise.resolve({ settings: { origin: 'https://rss.qiaomu.ai', defaultVersion: 'original', fontSize: 19, lineHeight: 1.9, textWidth: 36, readingFont: 'serif', readingTheme: 'auto', showImages: true, aiAssist: true } });
-      if (name === 'listSubscriptions') return Promise.resolve({ subscriptions: [{ id: 'feed:abc', name: '测试源', url: 'https://example.org/rss', group: 'AI 与技术' }] });
+      if (name === 'listSubscriptions') return Promise.resolve({ subscriptions: [{ id: 'abc', name: '测试源', url: 'https://example.org/rss', group: 'AI 与技术' }, { id:'featured', name:'潮流周刊 · Tw93', url:'https://weekly.tw93.fun/rss.xml' }] });
       if (name === 'listEntries') return Promise.resolve(args[0]?.cursor
         ? { entries: [{ key: 'qiaomu:3', channelName: '乔木博客', title: 'Earlier article', publishedAt: '2026-09-01T10:00:00.000Z', read: true }], hasMore: false }
         : { entries: ARTICLES, hasMore: true, nextCursor: 'older' });
@@ -305,11 +306,19 @@ featuredTab.click();
 await tick();
 if (discover.querySelectorAll('.qrs-discover-row').length !== 9) throw new Error('featured category did not filter');
 if (discover.querySelector('.qrs-discover-row .qrs-discover-info span')?.textContent.includes('https://')) throw new Error('feed URL is not compact');
-const podcastTab = [...discover.querySelectorAll('.qrs-discover-categories button')].find((node) => node.textContent === '播客');
+const readSubscribed = discover.querySelector('button[aria-label="阅读 潮流周刊 · Tw93"]');
+if (!readSubscribed || !readSubscribed.nextElementSibling?.textContent.includes('已订阅')) throw new Error('subscribed feed lacks a reading action');
+readSubscribed.click();
+await tick();
+if (container.querySelector('.qrs-discover') || localStorage.getItem('qrs.channel') !== 'feed:featured') throw new Error('reading a subscribed feed did not switch channels');
+container.querySelector('button[aria-label="探索订阅"]').click();
+await tick();
+const reopened = container.querySelector('.qrs-discover');
+const podcastTab = [...reopened.querySelectorAll('.qrs-discover-categories button')].find((node) => node.textContent === '播客');
 if (!podcastTab) throw new Error('podcast discovery category missing');
 podcastTab.click();
 await tick();
-if (!discover.textContent.includes('73 个结果') || !discover.querySelector('.qrs-discover-row .qrs-discover-add')) throw new Error('podcast feeds are not available to subscribe');
+if (!reopened.textContent.includes('73 个结果') || !reopened.querySelector('.qrs-discover-row .qrs-discover-add')) throw new Error('podcast feeds are not available to subscribe');
 console.log('DISCOVERY OK — compact rows, category filtering, inline action');
 
 console.log('CLIENT RENDER TESTS PASSED');

@@ -27,7 +27,7 @@ function feedHost(url) {
   catch { return url; }
 }
 
-export function Discover({ api, onClose, onAdded }) {
+export function Discover({ api, onClose, onAdded, onRead }) {
   const [query,setQuery] = useState('');
   const [category,setCategory] = useState('全部');
   const [topic,setTopic] = useState('');
@@ -36,7 +36,7 @@ export function Discover({ api, onClose, onAdded }) {
   const [busy,setBusy] = useState('');
   const [message,setMessage] = useState('');
   useEffect(() => setLimit(40),[query,category,topic]);
-  useEffect(() => { void api.listSubscriptions().then((result) => setSubscribed(result.subscriptions.map((sub) => sub.url))).catch((error) => setMessage(error.message)); },[api]);
+  useEffect(() => { void api.listSubscriptions().then((result) => setSubscribed(result.subscriptions)).catch((error) => setMessage(error.message)); },[api]);
   useEffect(() => {
     const closeOnEscape = (event) => { if (event.key === 'Escape') onClose(); };
     window.addEventListener('keydown', closeOnEscape);
@@ -50,7 +50,7 @@ export function Discover({ api, onClose, onAdded }) {
     setBusy(entry.url); setMessage('');
     try {
       const result = await api.addSubscription({ name:entry.name,url:entry.url,group:entry.category });
-      setSubscribed((current) => [...current,entry.url]);
+      setSubscribed((current) => [...current,result]);
       setMessage(result.lastError ? `已添加，首次获取失败：${result.lastError}` : `已订阅 ${entry.name}`);
       await onAdded();
     } catch (error) { setMessage(error?.message ?? String(error)); }
@@ -71,11 +71,12 @@ export function Discover({ api, onClose, onAdded }) {
       </div>
       <div className="qrs-discover-results">
         {visible.slice(0,limit).map((entry,index) => {
-          const added = subscribed.includes(entry.url);
+          const subscription = subscribed.find((sub) => sub.url === entry.url);
           return <div key={`${entry.url}:${index}`} className="qrs-discover-row">
             <span className="qrs-discover-avatar" aria-hidden="true">{entry.category === '播客' ? <Icon name="podcast" size={17} /> : entry.name.slice(0,1)}</span>
             <div className="qrs-discover-info"><strong>{entry.name}</strong><span title={entry.url}>{feedHost(entry.url)}<span className="qrs-discover-dot"> · </span>{entry.category}</span></div>
-            <button type="button" className="qrs-discover-add" disabled={Boolean(busy) || added} aria-label={`${added ? '已订阅' : '订阅'} ${entry.name}`} onClick={() => void add(entry)}>{added ? '已订阅' : busy === entry.url ? '添加中…' : <><Icon name="plus" />订阅</>}</button>
+            {subscription ? <div className="qrs-discover-actions"><button type="button" className="qrs-discover-read" aria-label={`阅读 ${entry.name}`} onClick={() => onRead(`feed:${subscription.id}`)}>阅读</button><span className="qrs-discover-subscribed">已订阅</span></div>
+              : <button type="button" className="qrs-discover-add" disabled={Boolean(busy)} aria-label={`订阅 ${entry.name}`} onClick={() => void add(entry)}>{busy === entry.url ? '添加中…' : <><Icon name="plus" />订阅</>}</button>}
           </div>;
         })}
         {visible.length > limit && <button type="button" className="qrs-discover-more" onClick={() => setLimit((current) => current + 40)}>显示更多</button>}

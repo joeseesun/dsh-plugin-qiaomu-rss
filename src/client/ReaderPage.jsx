@@ -525,6 +525,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   }, [activeArticle, active, versions]);
   useEffect(()=>{if(askContext&&activeArticle?.article)setAskContext(previous=>({...previous,key:activeArticle.article.key,title:activeArticle.article.titleZh||activeArticle.article.title,version:active,selection:previous.key===activeArticle.article.key&&previous.version===active?previous.selection:'',quoteId:previous.key===activeArticle.article.key&&previous.version===active?previous.quoteId:undefined}));},[activeArticle?.article?.key,active]);
   const openCompanion=(quote='')=>{if(!activeArticle)return;setFocused(false);setAskContext({key:activeArticle.article.key,title:activeArticle.article.titleZh||activeArticle.article.title,version:active,selection:quote,quoteId:quote?++selectionSerial.current:undefined});};
+  const selectChannel=(key)=>{if(key===channel)return;articleRequest.current++;setAskContext(null);setFocused(false);setSelected(undefined);setPassage(null);setFilter('all');setQuery('');setChannel(key);};
   const captureSelection=()=>{const found=selectedPassage(proseRef.current);if(found?.quote===passage?.quote)return;setPassage(found);if(found)openCompanion(found.quote);};
   const theme = reading.readingTheme && reading.readingTheme !== 'auto' ? reading.readingTheme : null;
   const THEME_COLORS = { light: ['#ffffff', '#202124'], paper: ['#f5efdf', '#40382e'], sage: ['#e8eee3', '#29382c'], mist: ['#e7edf2', '#293741'], dark: ['#252525', '#dedede'], black: ['#090909', '#cccccc'] };
@@ -715,9 +716,9 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
       <MediaDock episode={episode} onOpen={openArticle} onClose={() => setEpisode(null)} />
       {pickerOpen && !dialog && (
         <ChannelPicker channels={channels} current={channel} anchor={pickerAnchor} onClose={() => setPickerOpen(false)}
-          onSelect={(key) => {if(key!==channel){articleRequest.current++;setAskContext(null);setFocused(false);setSelected(undefined);setPassage(null);setFilter('all');setQuery('');setChannel(key);}}} onManage={() => { setPickerOpen(false); setDialog('settings'); }} />
+          onSelect={selectChannel} onManage={() => { setPickerOpen(false); setDialog('settings'); }} />
       )}
-      {dialog === 'discover' && <Discover api={api} onClose={() => setDialog(undefined)} onAdded={loadChannels} />}
+      {dialog === 'discover' && <Discover api={api} onClose={() => setDialog(undefined)} onAdded={loadChannels} onRead={(key) => {setDialog(undefined);selectChannel(key);}} />}
       {dialog === 'add' && <AddFeedDialog api={api} onClose={() => setDialog(undefined)} onDone={async () => { await loadChannels(); await loadPage(undefined, true); }} notify={notify} />}
       {dialog === 'settings' && <SettingsPage api={api} initialTab={settingsEntry.tab} startAddingPrompt={settingsEntry.addPrompt} onClose={() => { setDialog(undefined); setSettingsEntry({ tab:'reading', addPrompt:false }); }} notify={notify} />}
       {toast && <div className={`qrs-toast${toast.isError ? ' is-error' : ''}`}>{toast.message}</div>}
