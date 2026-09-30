@@ -235,7 +235,7 @@ function ensureStyles() {
   if (stylesReady) return;
   stylesReady = true;
   const style = document.createElement('style');
-  style.dataset.plugin = 'dsh-plugin-qiaomu-rss';
+  style.dataset.plugin = 'qiaomu-rss-dsh';
   style.textContent = PANEL_CSS + REFINEMENTS;
   document.head.appendChild(style);
 }

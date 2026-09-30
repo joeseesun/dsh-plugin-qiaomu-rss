@@ -10,7 +10,7 @@ import { Context } from '@deepseek-ai/cordis';
 
 rmSync('/tmp/qmr-sandbox/home3/storages/qiaomu-rss', { recursive: true, force: true });
 
-const { default: RssService } = await import('dsh-plugin-qiaomu-rss');
+const { default: RssService } = await import('qiaomu-rss-dsh');
 
 const calls = [];
 let streamScript = [

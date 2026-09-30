@@ -1,12 +1,12 @@
 {
-  "name": "dsh-plugin-qiaomu-rss",
+  "name": "qiaomu-rss-dsh",
   "description": "Qiaomu RSS reader for dsh: featured + personal feeds, AI translation/rewrite assist, agent tools, and a web reading panel",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "license": "GPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/joeseesun/dsh-plugin-qiaomu-rss.git"
+    "url": "https://github.com/joeseesun/qiaomu-rss-dsh.git"
   },
   "keywords": [
     "deepseek-harness",
@@ -42,7 +42,7 @@
       "patch": "./cordis.patch.yml"
     },
     "meta": {
-      "title": "乔木 RSS",
+      "title": "乔木 RSS · DSH",
       "description": "乔木 RSS 阅读器:公开聚合流、个人订阅、AI 译文/改写与 Agent 工具"
     },
     "client": {

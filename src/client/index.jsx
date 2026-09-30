@@ -8,7 +8,7 @@ import { nativeChatBridge } from './native-chat.js';
 import { ReaderIcon } from './ReaderPage.jsx';
 import { ReaderPanel } from './ReaderBoundary.jsx';
 
-const PLUGIN_ID = 'dsh-plugin-qiaomu-rss';
+const PLUGIN_ID = 'qiaomu-rss-dsh';
 export const PANEL_ID = 'qiaomu-rss';
 
 /** Duck-typed codec stub: the client never parses payloads, it forwards JSON. */

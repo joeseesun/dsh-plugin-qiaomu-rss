@@ -98,7 +98,7 @@ export function SettingsPage({ api, onClose, notify, initialTab = 'reading', sta
             <div className="qrs-settings-intro"><h2>关于乔木 RSS</h2><p>为 DeepSeek Harness 打造的安静阅读空间。</p></div>
             <div className="qrs-settings-card qrs-settings-about-card"><div className="qrs-settings-about-brand"><span>乔</span><div><h3>乔木 RSS</h3><p>版本 {packageInfo.version} · GPL-3.0-only</p></div></div><p>阅读乔木精选与个人 RSS，并用 Harness 原生 AI 对话伴读。阅读数据保存在本机 Harness 目录。</p></div>
             <div className="qrs-settings-card"><div className="qrs-settings-card-head"><h3>项目与反馈</h3></div><div className="qrs-settings-links">
-              {[['源码与更新','https://github.com/joeseesun/dsh-plugin-qiaomu-rss'],['反馈问题','https://github.com/joeseesun/dsh-plugin-qiaomu-rss/issues'],['向阳乔木','https://qiaomu.ai/'],['乔木博客','https://blog.qiaomu.ai/']].map(([label,href]) => <a key={href} href={href} target="_blank" rel="noopener noreferrer">{label}<ArrowUpRight size={15} /></a>)}
+              {[['源码与更新','https://github.com/joeseesun/qiaomu-rss-dsh'],['反馈问题','https://github.com/joeseesun/qiaomu-rss-dsh/issues'],['向阳乔木','https://qiaomu.ai/'],['乔木博客','https://blog.qiaomu.ai/']].map(([label,href]) => <a key={href} href={href} target="_blank" rel="noopener noreferrer">{label}<ArrowUpRight size={15} /></a>)}
             </div></div>
             <div className="qrs-settings-support">
               <div className="qrs-settings-card"><Heart size={18} /><h3>打赏支持</h3><p>感谢支持乔木持续维护这个插件。</p><img src={REWARD_QR} alt="向阳乔木打赏二维码" loading="lazy" width="140" height="140" referrerPolicy="no-referrer" /></div>

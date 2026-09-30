@@ -4,10 +4,10 @@
  * sandbox DSH home so the real profile data is never touched.
  *
  * Setup (see README): needs a node_modules scaffold with @deepseek-ai packages
- * (from the DSH runtime) and dsh-plugin-qiaomu-rss/lib. Example:
- *   mkdir -p /tmp/host-test/node_modules/dsh-plugin-qiaomu-rss
- *   cp package.json /tmp/host-test/node_modules/dsh-plugin-qiaomu-rss/
- *   cp -R lib /tmp/host-test/node_modules/dsh-plugin-qiaomu-rss/
+ * (from the DSH runtime) and qiaomu-rss-dsh/lib. Example:
+ *   mkdir -p /tmp/host-test/node_modules/qiaomu-rss-dsh
+ *   cp package.json /tmp/host-test/node_modules/qiaomu-rss-dsh/
+ *   cp -R lib /tmp/host-test/node_modules/qiaomu-rss-dsh/
  *   ln -s <dsh checkout>/node_modules/@deepseek-ai /tmp/host-test/node_modules/@deepseek-ai
  *   DSH_HOME=/tmp/qmr-sandbox/home3 node tests/mutations.mjs
  */
@@ -17,7 +17,7 @@ import { Context } from '@deepseek-ai/cordis';
 
 rmSync('/tmp/qmr-sandbox/home3/storages/qiaomu-rss', { recursive: true, force: true });
 
-const { default: RssService } = await import('dsh-plugin-qiaomu-rss');
+const { default: RssService } = await import('qiaomu-rss-dsh');
 
 const registered = [];
 const root = new Context();

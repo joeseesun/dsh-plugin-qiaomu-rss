@@ -1,4 +1,4 @@
-# 乔木 RSS · DeepSeek Harness 插件
+# 乔木 RSS · qiaomu-rss-dsh
 
 **中文** · [English](#english)
 
@@ -6,7 +6,7 @@
 
 Read RSS inside DeepSeek Harness and discuss the current article in its native AI conversation.
 
-这是公开源码的社区插件，并非 DeepSeek 官方维护或背书。预构建安装包见 [GitHub Releases](https://github.com/joeseesun/dsh-plugin-qiaomu-rss/releases)；目前不发布 npm 包。已在 DeepSeek Harness 0.2.0-rc.2 的 Desktop 和隔离 Web profile 中验证。
+这是公开源码的社区插件，并非 DeepSeek 官方维护或背书。预构建安装包见 [GitHub Releases](https://github.com/joeseesun/qiaomu-rss-dsh/releases)；目前不发布 npm 包。已在 DeepSeek Harness 0.2.0-rc.2 的 Desktop 和隔离 Web profile 中验证。
 
 ## 能做什么
 
@@ -22,11 +22,11 @@ Read RSS inside DeepSeek Harness and discuss the current article in its native A
 
 ## 安装
 
-需要 DeepSeek Harness 0.2.0-rc.2 的 `dsh` CLI。下载 [v0.5.0 Release](https://github.com/joeseesun/dsh-plugin-qiaomu-rss/releases/tag/v0.5.0) 中的 `.tgz` 和同名 `.sha256` 文件，在下载目录执行：
+需要 DeepSeek Harness 0.2.0-rc.2 的 `dsh` CLI。下载 [v0.5.1 Release](https://github.com/joeseesun/qiaomu-rss-dsh/releases/tag/v0.5.1) 中的 `.tgz` 和同名 `.sha256` 文件，在下载目录执行：
 
 ```bash
-shasum -a 256 -c dsh-plugin-qiaomu-rss-0.5.0.tgz.sha256
-dsh plugin --profile desktop add "$PWD/dsh-plugin-qiaomu-rss-0.5.0.tgz"
+shasum -a 256 -c qiaomu-rss-dsh-0.5.1.tgz.sha256
+dsh plugin --profile desktop add "$PWD/qiaomu-rss-dsh-0.5.1.tgz"
 ```
 
 使用命令行 Web 界面时，把 `desktop` 换为 `web`。安装后重启对应的 Harness profile，在侧边栏打开「乔木 RSS」。[官方插件安装说明](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/user/develop/basic/publish.md)介绍了 bundle 与 profile 的关系。插件依赖 Harness 已配置的模型与账号；默认无需再选工作区。
@@ -36,14 +36,14 @@ dsh plugin --profile desktop add "$PWD/dsh-plugin-qiaomu-rss-0.5.0.tgz"
 需要 Node.js 22 或更高版本，以及已安装的 DeepSeek Harness。克隆后执行：
 
 ```bash
-git clone https://github.com/joeseesun/dsh-plugin-qiaomu-rss.git
-cd dsh-plugin-qiaomu-rss
+git clone https://github.com/joeseesun/qiaomu-rss-dsh.git
+cd qiaomu-rss-dsh
 npm ci
 npm run build
 npm test
 ```
 
-`src/` 是源码；`lib/` 是随 Git 仓库提交的宿主与客户端构建产物，供 DSH bundle 加载。修改源码后请重新构建，并一并提交更新后的 `lib/`。包名 `dsh-plugin-qiaomu-rss` 必须与 `cordis.patch.yml` 中的 `name` 保持一致。
+`src/` 是源码；`lib/` 是随 Git 仓库提交的宿主与客户端构建产物，供 DSH bundle 加载。修改源码后请重新构建，并一并提交更新后的 `lib/`。包名 `qiaomu-rss-dsh` 必须与 `cordis.patch.yml` 中的 `name` 保持一致。
 
 本地 Desktop profile 已验证读取、伴读和可调分割线；预构建包还通过了隔离 Web profile 的安装、配置和启动检查。`private: true` 仅阻止误发 npm，不限制 GitHub 源码或 Release 下载。正式使用时请安装 Release 包；从 GitHub 源码构建适合参与开发。
 
@@ -55,7 +55,7 @@ npm test
 - 播客 RSS 推荐地址来自 [乔木 AI RSS 的源目录](https://github.com/joeseesun/qiaomu-ai-rss/blob/main/src/data/tidings.json)；第三方源的可用性和全文/音频内容由各发布方决定。
 - AI 伴读使用 DeepSeek Harness 当前可用的模型与原生会话；模型服务的配置与费用由 Harness 管理。
 
-问题与改进建议请通过 [GitHub Issues](https://github.com/joeseesun/dsh-plugin-qiaomu-rss/issues) 提交。本项目采用 [GPL-3.0-only](LICENSE) 许可。
+问题与改进建议请通过 [GitHub Issues](https://github.com/joeseesun/qiaomu-rss-dsh/issues) 提交。本项目采用 [GPL-3.0-only](LICENSE) 许可。
 
 ---
 
@@ -65,6 +65,6 @@ npm test
 
 Qiaomu RSS brings curated and personal RSS/Atom feeds into DeepSeek Harness. Read the original, translated, or rewritten article; manage unread items and favorites; import/export OPML; and open a native Harness AI conversation beside the article with its reading context attached. The companion opens directly in the default workspace. The article/chat divider is resizable.
 
-This is an open-source community plugin, not maintained or endorsed by DeepSeek. A prebuilt tarball is available from [GitHub Releases](https://github.com/joeseesun/dsh-plugin-qiaomu-rss/releases); it is not published to npm. With the DeepSeek Harness 0.2.0-rc.2 CLI, download the `.tgz` and `.sha256` files, verify them with `shasum -a 256 -c dsh-plugin-qiaomu-rss-0.5.0.tgz.sha256`, then run `dsh plugin --profile desktop add /absolute/path/to/dsh-plugin-qiaomu-rss-0.5.0.tgz` and restart the profile. Use `web` instead of `desktop` for the Web profile. The tarball was installed and booted in an isolated Web profile; the Desktop reading and AI-companion flow was also checked in the installed app. For development, use Node.js 22+ and run `npm ci`, `npm run build`, and `npm test`. The generated `lib/` files are committed because the DSH bundle loads them.
+This is an open-source community plugin, not maintained or endorsed by DeepSeek. A prebuilt tarball is available from [GitHub Releases](https://github.com/joeseesun/qiaomu-rss-dsh/releases); it is not published to npm. With the DeepSeek Harness 0.2.0-rc.2 CLI, download the `.tgz` and `.sha256` files, verify them with `shasum -a 256 -c qiaomu-rss-dsh-0.5.1.tgz.sha256`, then run `dsh plugin --profile desktop add /absolute/path/to/qiaomu-rss-dsh-0.5.1.tgz` and restart the profile. Use `web` instead of `desktop` for the Web profile. The tarball was installed and booted in an isolated Web profile; the Desktop reading and AI-companion flow was also checked in the installed app. For development, use Node.js 22+ and run `npm ci`, `npm run build`, and `npm test`. The generated `lib/` files are committed because the DSH bundle loads them.
 
 Reading data lives in the user's Harness home under `storages/qiaomu-rss/data.json`, outside this repository. The curated feed uses the public [Qiaomu AI RSS](https://github.com/joeseesun/qiaomu-ai-rss) API. AI conversations use the host's configured model and account. Obsidian note, highlight-saving, and daily-note features are intentionally absent. Source is licensed under [GPL-3.0-only](LICENSE); the bundled blog list retains its separate MIT notice.
