@@ -14,6 +14,7 @@ import { ChannelPicker, ChannelMark } from './ChannelPicker.jsx';
 import { ReadingAppearance } from './ReadingAppearance.jsx';
 import { AddFeedDialog } from './dialogs.jsx';
 import { SettingsPage } from './SettingsPage.jsx';
+import { resolveReadingVersion } from './reading-version.js';
 import { SubscriptionManager } from './SubscriptionManager.jsx';
 import { Discover } from './Discover.jsx';
 import { MediaDock } from './MediaDock.jsx';
@@ -423,7 +424,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
     const data = await run(api.getArticle(key), { errorPrefix: '读取正文失败' });
     if (request !== articleRequest.current) return;
     if (!data) { setSelected({ error: true, key }); return; }
-    setSelected({ ...data, article:{...data.article,read:true}, active: restoreVersion || reading.defaultVersion });document.querySelector('.qrs-reader')?.scrollTo?.({top:0});
+    setSelected({ ...data, article:{...data.article,read:true}, active: resolveReadingVersion(restoreVersion || reading.defaultVersion, data) });document.querySelector('.qrs-reader')?.scrollTo?.({top:0});
     if (data.article?.read === false) {
       void api.setRead([key], true).catch(e=>notify(e.message,true));
       setPage((previous) => ({ ...previous, entries: previous.entries.map((entry) => (entry.key === key ? { ...entry, read: true } : entry)) }));
