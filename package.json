@@ -1,0 +1,76 @@
+{
+  "name": "dsh-plugin-qiaomu-rss",
+  "description": "Qiaomu RSS reader for dsh: featured + personal feeds, AI translation/rewrite assist, agent tools, and a web reading panel",
+  "version": "0.5.0",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joeseesun/dsh-plugin-qiaomu-rss.git"
+  },
+  "keywords": ["deepseek-harness", "dsh-plugin", "rss", "qiaomu"],
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node tests/smoke.mjs && node tests/article-context.mjs && node tests/video.mjs && node tests/render.mjs && node tests/harness-integration.mjs"
+  },
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "README.md",
+    "vendor",
+    "src/data/independent-blogs.json",
+    "cordis.patch.yml",
+    "lib"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "meta": {
+      "title": "乔木 RSS",
+      "description": "乔木 RSS 阅读器:公开聚合流、个人订阅、AI 译文/改写与 Agent 工具"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-api-remotes",
+        "@deepseek-ai/dsh-api-gateway",
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-primitives"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.4",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-tools": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-llm": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-agent-default-model": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-home-paths": "0.2.0-rc.2"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {"optional": true},
+    "@deepseek-ai/dsh-typert-protocol": {"optional": true},
+    "@deepseek-ai/dsh-tools": {"optional": true},
+    "@deepseek-ai/dsh-llm": {"optional": true},
+    "@deepseek-ai/dsh-agent-default-model": {"optional": true},
+    "@deepseek-ai/dsh-home-paths": {"optional": true}
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1",
+    "jsdom": "^26.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
