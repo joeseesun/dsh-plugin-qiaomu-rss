@@ -1,3 +1,5 @@
+import { CollectionSettings } from './CollectionPanel.jsx';
+import { collectionCopy } from './collection-copy.js';
 import { useEffect, useState } from 'react';
 import { BookOpen, Rss, Info, Download, Upload, ArrowUpRight, Heart, Sparkles } from 'lucide-react';
 import packageInfo from '../../package.json';
@@ -11,7 +13,7 @@ const TABS = [['reading', '阅读体验', BookOpen], ['sources', '订阅管理',
 const REWARD_QR = 'https://radio.qiaomu.ai/assets/qiaomu_reward_qr.png';
 const FOLLOW_QR = 'https://radio.qiaomu.ai/assets/qiaomu_wechat_public_account_qr.jpg';
 
-export function SettingsPage({ api, onClose, notify, initialTab = 'reading', startAddingPrompt = false }) {
+export function SettingsPage({ api, onClose, notify, initialTab = 'reading', startAddingPrompt = false, onCollection }) {
   const [tab, setTab] = useState(initialTab);
   const [settings, setSettings] = useState(null);
   const [subscriptions, setSubscriptions] = useState([]);
@@ -62,7 +64,7 @@ export function SettingsPage({ api, onClose, notify, initialTab = 'reading', sta
       <div className="qrs-settings-body">
         <nav className="qrs-settings-tabs" aria-label="设置分类">
           <span className="qrs-settings-nav-caption">设置</span>
-          {TABS.map(([key, label, TabIcon]) => <button key={key} type="button" aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)}><TabIcon size={17} strokeWidth={1.8} />{label}</button>)}
+          {[...TABS.slice(0, -1), ['lab', collectionCopy().lab, Sparkles], TABS.at(-1)].map(([key, label, TabIcon]) => <button key={key} type="button" aria-current={tab === key ? 'page' : undefined} onClick={() => setTab(key)}><TabIcon size={17} strokeWidth={1.8} />{label}</button>)}
         </nav>
         <main className="qrs-settings-content">
           {!settings && <p role="status">{message || '正在加载设置…'}</p>}
@@ -93,6 +95,7 @@ export function SettingsPage({ api, onClose, notify, initialTab = 'reading', sta
               <SubscriptionManager api={api} subscriptions={subscriptions} onChange={setSubscriptions} notify={(text, isError) => { setMessage(text); if (isError) notify(text, true); }} />
             </div>
           </section>}
+          {tab === 'lab' && <CollectionSettings api={api} notify={setMessage} onOpenRequests={onCollection} />}
           {tab === 'prompts' && <section aria-label="快捷提示词设置"><div className="qrs-settings-intro"><h2>快捷提示词</h2><p>把常用的阅读提问放在手边。</p></div><div className="qrs-settings-card"><PromptManager notify={setMessage} startAdding={startAddingPrompt} /></div></section>}
           {tab === 'about' && <section aria-label="关于乔木 RSS">
             <div className="qrs-settings-intro"><h2>关于乔木 RSS</h2><p>为 DeepSeek Harness 打造的安静阅读空间。</p></div>

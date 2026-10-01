@@ -80,6 +80,9 @@ const ARTICLES = [
 
 const apiCalls = [];
 const apiArgs = [];
+let collectionEnabled = false;
+let collectionVerified = false;
+const collectionJobs = [];
 let generatedOnce = false;
 let delayNextArticle = false;
 let unblockArticle;
@@ -87,7 +90,15 @@ const api = new Proxy({}, {
   get(_target, name) {
     return (...args) => {
       apiCalls.push(name); apiArgs.push({ name, args });
+      if (name === 'getCollectionSettings') return Promise.resolve({ enabled:collectionEnabled, verified:collectionVerified });
+      if (name === 'configureCollection') { collectionEnabled=args[0].enabled; collectionVerified=true; return Promise.resolve({enabled:collectionEnabled,verified:collectionVerified}); }
+      if (name === 'collectionSnapshot') return Promise.resolve({enabled:collectionEnabled,verified:collectionVerified,jobs:collectionJobs,pending:0});
+      if (name === 'listCollectionJobs') return Promise.resolve({jobs:collectionJobs,hasMore:false,nextCursor:''});
+      if (name === 'submitCollection') { collectionJobs.push({id:'qa-job',url:args[0].url,title:'中文收录标题',originalTitle:'English source',createdAt:Date.now(),status:'complete',notified:true});return Promise.resolve(collectionJobs[0]); }
+      if (name === 'acknowledgeCollection') return Promise.resolve({ok:true});
+      if (name === 'openCollectionResult') return Promise.resolve({key:'qiaomu:1'});
       if (name === 'listChannels') return Promise.resolve({ channels: [
+        ...(collectionEnabled ? [{key:'collection',kind:'collection',name:'申请收录',unread:0,total:collectionJobs.length}] : []),
         { key: 'all', kind: 'aggregate', name: '全部订阅', unread: 1, total: 0 },
         { key: 'qiaomu', kind: 'qiaomu', name: '乔木精选', unread: 1, total: 2 },
         { key: 'qiaomu:blog', kind: 'qiaomu', name: '乔木博客', unread: 1, total: 2 },
@@ -264,7 +275,10 @@ for (let i = 0; i < 4; i += 1) await tick();
 if (!container.querySelector('.qrs-settings-page[aria-label="乔木 RSS 设置"]')) throw new Error('settings dialog missing');
 if (!text().includes('文章外观')) throw new Error('reading settings missing');
 const tabs = container.querySelectorAll('.qrs-settings-tabs button');
-if (tabs.length !== 4) throw new Error('settings navigation incomplete');
+if (tabs.length !== 5) throw new Error('settings navigation incomplete');
+button('实验室', container.querySelector('.qrs-settings-tabs')).click();
+await tick();
+if (!text().includes('公开收录') || !container.querySelector('input[type=password]')) throw new Error('labs disclosure or private invite field missing');
 button('订阅管理', container.querySelector('.qrs-settings-tabs')).click();
 await tick();
 if (!container.querySelector('.qrs-subscriptions[aria-label="管理订阅"]')) throw new Error('subscription manager missing from settings');

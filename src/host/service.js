@@ -13,6 +13,7 @@ import { readingMaterial, readingScopeInstruction } from '../reading-scope.js';
 import * as qiaomu from './qiaomu.js';
 import { VideoPlayerServer } from './video-player.js';
 import * as podscribe from './podscribe.js';
+import { CollectionManager } from './collection.js';
 import { createGenerationGuard, generateRewrite, generateTranslation } from './ai.js';
 import { createToolDefinitions } from './tools.js';
 
@@ -21,7 +22,7 @@ const FEED_TIMEOUT_MS = 20_000;
 const STREAM_LIMIT = 100;
 
 export class RssService extends TypertRemoteService {
-  static inject = ['tools', 'llm', 'agentDefaultModel'];
+  static inject = ['tools', 'llm', 'agentDefaultModel', 'timer'];
 
   constructor(ctx, config = {}) {
     super(ctx, 'rss');
@@ -30,7 +31,10 @@ export class RssService extends TypertRemoteService {
     this.store = new RssStore(ctx.logger);
     this.guard = createGenerationGuard();
     this.videoPlayer = new VideoPlayerServer();
-    this.ready = this.store.load();
+    this.collection = new CollectionManager(this.store, () => this.origin, {
+      schedule: (fn, delay) => typeof ctx.timeout === 'function' ? ctx.timeout(fn, delay) : (() => { const timer = setTimeout(fn, delay); timer.unref?.(); return () => clearTimeout(timer); })(),
+    });
+    this.ready = this.store.load().then(() => this.collection.wake());
     ctx.inject(['systemPrompt'], scope => {
       scope.systemPrompt.context({name:'qiaomu-rss:reading',order:9500,interpolate:false,text:({agent})=>this.store.data.companionContexts?.[agent?.session?.id]?.text || ''});
     });
@@ -39,6 +43,7 @@ export class RssService extends TypertRemoteService {
     }
     ctx.logger.info('qiaomu-rss: service started');
     ctx.effect(() => () => {
+      this.collection.dispose();
       void this.videoPlayer.dispose();
       void this.store.dispose().catch(error => ctx.logger.warn(String(error)));
     }, 'qiaomu-rss: flush store on dispose');
@@ -90,6 +95,7 @@ export class RssService extends TypertRemoteService {
       unread: countUnread(this.entriesOf('feeds:all')),
       total: 0,
     });
+    if (this.collection.settings().enabled || this.collection.snapshot().jobs.length) channels.push({ key: 'collection', kind: 'collection', name: '申请收录', unread: 0, total: this.collection.snapshot().jobs.length });
     channels.push({ key: 'podscribe', kind: 'podcast', name: '海外播客原文', unread: countUnread(data.podcastEntries ?? []), total: (data.podcastEntries ?? []).length });
     const groups = new Map();
     for (const sub of data.subscriptions) {
@@ -264,6 +270,26 @@ export class RssService extends TypertRemoteService {
     };
   }
 
+  async getCollectionSettings() { await this.ready; return this.collection.settings(); }
+  async configureCollection(request) { await this.ready; return this.collection.configure(request); }
+  async submitCollection(request) { await this.ready; return this.collection.submit(request?.url, request?.retryId); }
+  async listCollectionJobs(request) { await this.ready; return this.collection.list(request?.cursor); }
+  async collectionSnapshot() { await this.ready; return this.collection.snapshot(); }
+  async acknowledgeCollection(request) { await this.ready; if (!Array.isArray(request?.ids) || request.ids.length > 100 || request.ids.some(id => typeof id !== 'string')) throw new Error('无效申请'); return this.collection.acknowledge(request.ids); }
+  async openCollectionResult(request) {
+    await this.ready;
+    const job = await this.collection.resolve(request?.id);
+    const raw = await qiaomu.fetchEntry(job.origin, job.entryId);
+    const article = qiaomu.normalizeQiaomuEntry(raw, 'collection');
+    if (!article) throw new Error('收录结果格式无效');
+    // Separate origins in keys and keep the server's Chinese title across article reloads.
+    article.key = `collection:${hashKey(job.origin)}:${job.entryId}`;
+    article.collectionOrigin = job.origin; article.collectionEntryId = job.entryId;
+    article.title = job.originalTitle || article.title; article.titleZh = job.title || article.titleZh;
+    article.html = sanitizeHtml(article.html, { baseUrl: article.url });
+    this.store.putArticle(article); await this.store.flush(); return { key: article.key };
+  }
+
   async searchPodcastShows(request) {
     return { shows: await podscribe.searchShows(request?.query) };
   }
@@ -291,6 +317,16 @@ export class RssService extends TypertRemoteService {
   /** Resolve the article body, fetching Qiaomu detail when needed. */
   async ensureArticle(key) {
     const cached = this.store.getArticle(key);
+    if (key.startsWith('collection:')) {
+      if (cached?.html) return cached;
+      const job = this.collection.state().jobs.find(item => item.status === 'complete' && `collection:${hashKey(item.origin)}:${item.entryId}` === key);
+      if (!job) return cached;
+      const raw = await qiaomu.fetchEntry(job.origin, job.entryId);
+      const article = qiaomu.normalizeQiaomuEntry(raw, 'collection');
+      if (!article) return cached;
+      Object.assign(article, { key, collectionOrigin: job.origin, collectionEntryId: job.entryId, title: job.originalTitle || article.title, titleZh: job.title || article.titleZh });
+      article.html = sanitizeHtml(article.html, { baseUrl: article.url }); this.store.putArticle(article); return article;
+    }
     if (key.startsWith('qiaomu:')) {
       if (cached?.html) return cached;
       const id = key.slice('qiaomu:'.length);
@@ -340,11 +376,12 @@ export class RssService extends TypertRemoteService {
     if (local?.rewrite) {
       versions.rewrite = { available: true, status: 'ok', source: local.rewrite.source, title: local.rewrite.title, markdown: local.rewrite.markdown };
     }
-    if (article.key.startsWith('qiaomu:')) {
-      const id = article.key.slice('qiaomu:'.length);
+    if (article.key.startsWith('qiaomu:') || article.collectionEntryId) {
+      const id = article.collectionEntryId || article.key.slice('qiaomu:'.length);
+      const origin = article.collectionOrigin || this.origin;
       if (!versions.translation.available) {
         try {
-          const published = await qiaomu.fetchTranslation(this.origin, id);
+          const published = await qiaomu.fetchTranslation(origin, id);
           if (published.status === 'ok') {
             const record = {
               title: article.titleZh ?? article.title,
@@ -361,7 +398,7 @@ export class RssService extends TypertRemoteService {
       }
       if (!versions.rewrite.available) {
         try {
-          const published = await qiaomu.fetchRewrite(this.origin, id);
+          const published = await qiaomu.fetchRewrite(origin, id);
           if (published.status === 'ok') {
             const record = {
               title: published.title ?? article.titleZh ?? article.title,
@@ -736,6 +773,8 @@ export class RssService extends TypertRemoteService {
     'listChannels', 'listEntries', 'searchArticles', 'getArticle', 'getVersionContent',
     'generateVersion', 'refresh', 'listSubscriptions', 'addSubscription',
     'removeSubscription', 'updateSubscription', 'opmlPreview', 'opmlImport', 'opmlExport',
+    'searchPodcastShows', 'listPodcastEpisodes', 'importPodcastTranscript',
+    'getCollectionSettings', 'configureCollection', 'submitCollection', 'listCollectionJobs', 'collectionSnapshot', 'acknowledgeCollection', 'openCollectionResult',
     'setRead', 'setFavorite', 'getSettings', 'saveSettings', 'prepareChat', 'setReadingContext',
   ];
   const prototype = RssService.prototype;

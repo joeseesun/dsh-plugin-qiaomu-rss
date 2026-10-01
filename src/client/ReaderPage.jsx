@@ -22,6 +22,8 @@ import { MediaDock } from './MediaDock.jsx';
 import { quoteRange, selectedPassage } from './selection.js';
 import { AskArticle } from './AskArticle.jsx';
 import { articleAudioUrl, articleVideoEmbed } from '../video.js';
+import { CollectionPanel } from './CollectionPanel.jsx';
+import { collectionCopy, clickedLink } from './collection-copy.js';
 import { printArticle } from './print-article.js';
 import REFINEMENTS from './refinements.css';
 
@@ -272,6 +274,8 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   const [refreshing, setRefreshing] = useState(false);
   const [selected, setSelected] = useState(undefined);
   const [toast, setToast] = useState(undefined);
+  const [collectionRevision, setCollectionRevision] = useState(0);
+  const [linkMenu, setLinkMenu] = useState(null);
   const [dialog, setDialog] = useState(undefined);
   const [settingsEntry, setSettingsEntry] = useState({ tab:'reading', addPrompt:false });
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -332,6 +336,33 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
       notify(`${errorPrefix}：${error?.message ?? String(error)}`, true);
       return undefined;
     }
+  };
+
+  const openCollectionSettings = () => { setSettingsEntry({ tab: 'lab', addPrompt: false }); setDialog('settings'); };
+  const openCollection = async (id) => { const result = await run(api.openCollectionResult({ id })); if (result) await openArticle(result.key, 'rewrite'); };
+  useEffect(() => {
+    let live = true, timer; const delivered = new Set();
+    const update = async () => {
+      try {
+        const snapshot = await api.collectionSnapshot(); if (!live) return;
+        setCollectionRevision(value => value + 1);
+        const completed = snapshot.jobs.filter(job => !job.notified && ['complete', 'failed'].includes(job.status) && !delivered.has(job.id));
+        if (completed.length) {
+          const copy = collectionCopy(); notify(completed.map(job => `${copy[job.status]}：${job.title || job.url}`).join('；'), completed.some(job => job.status === 'failed'));
+          completed.forEach(job => delivered.add(job.id));
+          try { await api.acknowledgeCollection({ ids: completed.map(job => job.id).slice(0, 100) }); } catch { completed.forEach(job => delivered.delete(job.id)); }
+        }
+        if (live && snapshot.enabled && snapshot.pending > 0) timer = setTimeout(update, 15_000);
+      } catch { /* Retry on focus or settings changes; no idle network loop. */ }
+    };
+    const changed = () => { clearTimeout(timer); void loadChannels(); void update(); };
+    void update(); window.addEventListener('qrs-collection-changed', changed); window.addEventListener('focus', changed);
+    return () => { live = false; clearTimeout(timer); window.removeEventListener('qrs-collection-changed', changed); window.removeEventListener('focus', changed); };
+  }, [api]);
+  useEffect(() => { if (!linkMenu) return; const close = event => { if (event.type !== 'keydown' || event.key === 'Escape') setLinkMenu(null); }; window.addEventListener('click', close); window.addEventListener('keydown', close); return () => { window.removeEventListener('click', close); window.removeEventListener('keydown', close); }; }, [linkMenu]);
+  const linkContext = event => {
+    const url = clickedLink(event, event.currentTarget); if (!url) return;
+    event.preventDefault(); setLinkMenu({ url, x: Math.max(8, Math.min(event.clientX, window.innerWidth - 240)), y: Math.max(8, Math.min(event.clientY, window.innerHeight - 125)) });
   };
 
   const applyReading = async (patch) => {
@@ -402,7 +433,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
 
   useEffect(() => {
     const entry = channels.find((item) => item.key === channel);
-    if (!entry || channel === 'podscribe' || (entry.total > 0 && (channel === 'all' || channel === 'feeds:all'))) return;
+    if (!entry || channel === 'podscribe' || channel === 'collection' || (entry.total > 0 && (channel === 'all' || channel === 'feeds:all'))) return;
     const last = automaticRefresh.current.get(channel) ?? 0;
     if (Date.now() - last < (entry.total > 0 ? 15 * 60_000 : 60_000)) return;
     automaticRefresh.current.set(channel, Date.now());
@@ -439,6 +470,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
 
   const refresh = async (target) => {
     setRefreshing(true);
+    if (target === 'collection') { setCollectionRevision(value => value + 1); setRefreshing(false); return; }
     const outcome = await run(api.refresh(target), { errorPrefix: '刷新失败' });
     setRefreshing(false);
     if (outcome) {
@@ -551,16 +583,16 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
               <Icon name="chevron-down" size={13} />
             </button>
             <button type="button" className="qrs-icon" title="探索订阅" aria-label="探索订阅" onClick={() => setDialog('discover')}><Icon name="plus" /></button>
-            <button type="button" className="qrs-icon" title="搜索" aria-label="搜索" onClick={() => { setSearchOpen((open) => !open); setTimeout(() => searchInput.current?.focus(), 0); }}><Icon name="search" /></button>
-            <button type="button" className={`qrs-icon${refreshing ? ' is-loading' : ''}`} title="刷新" aria-label="刷新" onClick={() => void refresh(channel)}><Icon name="refresh-cw" /></button>
+            {channel !== 'collection' && <button type="button" className="qrs-icon" title="搜索" aria-label="搜索" onClick={() => { setSearchOpen((open) => !open); setTimeout(() => searchInput.current?.focus(), 0); }}><Icon name="search" /></button>}
+            {channel !== 'collection' && <button type="button" className={`qrs-icon${refreshing ? ' is-loading' : ''}`} title="刷新" aria-label="刷新" onClick={() => void refresh(channel)}><Icon name="refresh-cw" /></button>}
           </div>
-          <div className="qrs-filters" role="group">
+          {channel !== 'collection' && <div className="qrs-filters" role="group">
             {[['all', '全部'], ['unread', '未读'], ['favorites', '收藏']].map(([value, label]) => (
               <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>
             ))}
             <button type="button" className="qrs-settings-button" title="插件设置" aria-label="插件设置" onClick={() => setDialog('settings')}><Icon name="settings" size={17} /></button>
-          </div>
-          <div className={`qrs-search-box${searchOpen ? '' : ' is-hidden'}`}>
+          </div>}
+          <div className={`qrs-search-box${searchOpen && channel !== 'collection' ? '' : ' is-hidden'}`}>
             <input ref={searchInput} type="search" aria-label="搜索文章" placeholder="搜索已加载的文章…" value={query}
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={(event) => { if (event.key === 'Escape') { event.stopPropagation(); setSearchOpen(false); setQuery(''); } }} />
@@ -569,6 +601,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
             {pageError ? pageError : ''}
           </div>
           <div className="qrs-list">
+            {channel === 'collection' ? <CollectionPanel api={api} revision={collectionRevision} onOpen={openCollection} onSettings={openCollectionSettings} notify={notify} /> : <>
             {pageError && <div className="qrs-empty"><button type="button" onClick={() => void loadPage(undefined, true)}>重试</button></div>}
             {!pageError && loading && page.entries.length === 0 && <div className="qrs-empty">正在加载…</div>}
             {!pageError && !loading && page.entries.length === 0 && (
@@ -598,6 +631,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
                 {loadingMore ? '加载中…' : '加载更早文章'}
               </button>
             )}
+            </>}
           </div>
         </aside>
         <div className="qrs-resize" role="separator" aria-orientation="vertical" onPointerDown={startDrag}
@@ -664,6 +698,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
                       {activeArticle.article.url && <button type="button" onClick={() => { setMenuOpen(false); window.open(activeArticle.article.url, '_blank', 'noopener,noreferrer'); }}><Icon name="globe" size={15} />打开原文</button>}
                       <button type="button" onClick={() => { setMenuOpen(false); try { printArticle({ title: activeArticle.article.title, url: activeArticle.article.url, version: VERSION_LABELS[active], html: bodyHtml }); } catch (error) { notify(`打印失败：${error?.message ?? String(error)}`, true); } }}><Icon name="file-check" size={15} />打印 / 存为 PDF</button>
                       <button type="button" onClick={() => { setMenuOpen(false); void openArticle(activeArticle.article.key); }}><Icon name="refresh-cw" size={15} />重新加载文章</button>
+                      <button type="button" onClick={() => { setMenuOpen(false); selectChannel('collection'); }}><Icon name="rss" size={15} />{collectionCopy().jobs}</button>
                       <button type="button" onClick={() => { setMenuOpen(false); setDialog('settings'); }}><Icon name="settings" size={15} />插件设置</button>
                       <button type="button" onClick={(event) => { setMenuOpen(false); openPicker(event); }}><Icon name="rss" size={15} />选择频道</button>
                     </div>
@@ -671,7 +706,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
                   {appearanceOpen && <ReadingAppearance settings={reading} onChange={applyReading} onClose={() => setAppearanceOpen(false)} />}
                 </div>
               </div>
-              <article className="qrs-article">
+              <article className="qrs-article" onContextMenu={linkContext}>
                 <div className="qrs-article-head">
                   {activeArticle.article.channelName && <span>{activeArticle.article.channelName}</span>}
                   {activeArticle.article.publishedAt && <span>{new Date(activeArticle.article.publishedAt).toLocaleDateString('zh-CN')}</span>}
@@ -683,6 +718,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
                     ? <a href={activeArticle.article.url} target="_blank" rel="noopener noreferrer">{activeArticle.article.titleZh ?? activeArticle.article.title}</a>
                     : (activeArticle.article.titleZh ?? activeArticle.article.title)}
                 </h1>
+                {activeArticle.article.titleZh && activeArticle.article.titleZh !== activeArticle.article.title && activeArticle.article.key.startsWith('collection:') && <p className="qrs-original-title">{collectionCopy().original}：{activeArticle.article.title}</p>}
                 {audioUrl && <MediaDock key={activeArticle.article.key} episode={{ ...activeArticle.article, audio: audioUrl }} />}
                 {videoEmbed && <VideoPlayer key={videoEmbed} embed={videoEmbed} playerUrl={activeArticle.videoPlayerUrl} />}
                 {bodyHtml
@@ -721,8 +757,15 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
       )}
       {dialog === 'discover' && <Discover api={api} onClose={() => setDialog(undefined)} onAdded={loadChannels} onRead={(key) => {setDialog(undefined);selectChannel(key);}} onPodcastImported={async (key) => {setDialog(undefined);selectChannel('podscribe');await loadChannels();await openArticle(key);}} />}
       {dialog === 'add' && <AddFeedDialog api={api} onClose={() => setDialog(undefined)} onDone={async () => { await loadChannels(); await loadPage(undefined, true); }} notify={notify} />}
-      {dialog === 'settings' && <SettingsPage api={api} initialTab={settingsEntry.tab} startAddingPrompt={settingsEntry.addPrompt} onClose={() => { setDialog(undefined); setSettingsEntry({ tab:'reading', addPrompt:false }); }} notify={notify} />}
-      {toast && <div className={`qrs-toast${toast.isError ? ' is-error' : ''}`}>{toast.message}</div>}
+      {dialog === 'settings' && <SettingsPage api={api} onCollection={() => { setDialog(undefined); selectChannel('collection'); }} initialTab={settingsEntry.tab} startAddingPrompt={settingsEntry.addPrompt} onClose={() => { setDialog(undefined); setSettingsEntry({ tab:'reading', addPrompt:false }); }} notify={notify} />}
+      {linkMenu && <div className="qrs-menu qrs-link-menu" role="menu" style={{ left: linkMenu.x, top: linkMenu.y }}>
+        <button type="button" role="menuitem" autoFocus onClick={() => { void navigator.clipboard.writeText(linkMenu.url).then(() => notify(collectionCopy().copied)).catch(error => notify(error.message, true)); setLinkMenu(null); }}><Icon name="file-check" size={15} />{collectionCopy().copy}</button>
+        <button type="button" role="menuitem" onClick={() => { const url = linkMenu.url; setLinkMenu(null); void api.getCollectionSettings().then(settings => {
+          if (!settings.enabled || !settings.verified) { openCollectionSettings(); return; }
+          if (window.confirm(collectionCopy().disclosure + '\n\n' + url)) void run(api.submitCollection({ url })).then(result => { if (result) { notify(collectionCopy().submitted); window.dispatchEvent(new Event('qrs-collection-changed')); } });
+        }).catch(error => notify(error.message, true)); }}><Icon name="rss" size={15} />{collectionCopy().request}</button>
+      </div>}
+      {toast && <div role="status" aria-live="polite" className={`qrs-toast${toast.isError ? ' is-error' : ''}`}>{toast.message}</div>}
     </div>
   );
 }
