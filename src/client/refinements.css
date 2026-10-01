@@ -404,3 +404,24 @@
 .qrs-collection-error{font-size:12px;color:var(--dsw-alias-state-error-primary);overflow-wrap:anywhere}
 .qrs-root .qrs-link-menu{position:fixed;right:auto;z-index:120;min-width:215px}
 .qrs-original-title{margin:-12px 0 22px}
+
+/* Labs follows Obsidian's setting rows: information left, controls right. */
+.qrs-settings-content section.qrs-lab-settings { display:block; }
+.qrs-lab-settings .qrs-settings-intro { margin-bottom: 12px; }
+.qrs-lab-settings .qrs-settings-intro h2 { font-size: 20px; }
+.qrs-lab-rows { max-width: 840px; }
+.qrs-lab-row { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:16px 0; border-bottom:1px solid var(--qrs-border); }
+.qrs-lab-info { flex:1; min-width:0; }
+.qrs-lab-info h3 { margin:0; font-size:14px; font-weight:600; }
+.qrs-lab-info p { margin:6px 0 0; color:var(--qrs-muted); font-size:12px; line-height:1.65; }
+.qrs-lab-controls { display:flex; align-items:center; gap:8px; flex:0 1 370px; min-width:0; }
+.qrs-lab-controls input { width:100%; min-width:0; height:42px; box-sizing:border-box; padding:0 12px; border:1px solid var(--qrs-border); border-radius:6px; background:var(--qrs-bg); color:var(--qrs-fg); font:inherit; font-size:13px; }
+.qrs-lab-controls input:focus-visible { outline:1px solid var(--qrs-accent); outline-offset:2px; }
+.qrs-lab-row .qrs-collection-button { flex-shrink:0; white-space:nowrap; font-size:13px; min-height:42px; }
+.qrs-lab-switch { min-width:44px; min-height:44px; justify-content:center; flex-shrink:0; }
+.qrs-lab-switch:has(input:disabled) { opacity:.45; cursor:default; }
+.qrs-lab-note { color:var(--qrs-muted); font-size:12px; line-height:1.6; margin:16px 0; }
+@media(max-width:760px) {
+  .qrs-lab-row { gap:12px; flex-wrap:wrap; }
+  .qrs-lab-controls { flex-basis:100%; }
+}

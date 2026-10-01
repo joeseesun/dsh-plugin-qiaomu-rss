@@ -91,7 +91,7 @@ const api = new Proxy({}, {
     return (...args) => {
       apiCalls.push(name); apiArgs.push({ name, args });
       if (name === 'getCollectionSettings') return Promise.resolve({ enabled:collectionEnabled, verified:collectionVerified });
-      if (name === 'configureCollection') { collectionEnabled=args[0].enabled; collectionVerified=true; return Promise.resolve({enabled:collectionEnabled,verified:collectionVerified}); }
+      if (name === 'configureCollection') { if (args[0].invite === 'invalid-test') return Promise.reject(new Error('邀请码无效')); collectionEnabled=args[0].enabled; if (args[0].invite) collectionVerified=true; return Promise.resolve({enabled:collectionEnabled,verified:collectionVerified}); }
       if (name === 'collectionSnapshot') return Promise.resolve({enabled:collectionEnabled,verified:collectionVerified,jobs:collectionJobs,pending:0});
       if (name === 'listCollectionJobs') return Promise.resolve({jobs:collectionJobs,hasMore:false,nextCursor:''});
       if (name === 'submitCollection') { collectionJobs.push({id:'qa-job',url:args[0].url,title:'中文收录标题',originalTitle:'English source',createdAt:Date.now(),status:'complete',notified:true});return Promise.resolve(collectionJobs[0]); }
@@ -279,6 +279,29 @@ if (tabs.length !== 5) throw new Error('settings navigation incomplete');
 button('实验室', container.querySelector('.qrs-settings-tabs')).click();
 await tick();
 if (!text().includes('公开收录') || !container.querySelector('input[type=password]')) throw new Error('labs disclosure or private invite field missing');
+const lab = container.querySelector('.qrs-lab-settings');
+const switchControl = () => lab.querySelector('input[role=switch]');
+if (!switchControl().disabled || !button('查看申请', lab) || !button('验证并保存', lab).disabled) throw new Error('unverified setup path unclear');
+const inviteInput = lab.querySelector('input[type=password]');
+const enterInvite = async value => {
+  Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value').set.call(inviteInput, value);
+  inviteInput.dispatchEvent(new dom.window.Event('input', { bubbles: true })); await tick();
+};
+await enterInvite('invalid-test');
+button('验证并保存',lab).click(); await tick();
+if (!lab.querySelector('[role=alert]')?.textContent.includes('邀请码无效') || inviteInput.value !== 'invalid-test' || !switchControl().disabled) throw new Error('failed verification lost draft or enabled feature');
+await enterInvite('valid-test');
+inviteInput.closest('form').dispatchEvent(new dom.window.Event('submit', { bubbles:true, cancelable:true })); await tick();
+if (inviteInput.value || switchControl().disabled || switchControl().checked) throw new Error('verification must save the code without toggling collection');
+switchControl().click(); await tick();
+if (!collectionEnabled || !switchControl().checked) throw new Error('switch must save immediately');
+switchControl().click(); await tick();
+if (collectionEnabled || switchControl().checked) throw new Error('switch must save disabled state immediately');
+button('查看申请',lab).click(); await tick();
+if (container.querySelector('.qrs-settings-page') || !container.querySelector('.qrs-collection-panel')) throw new Error('requests navigation failed');
+container.querySelector('.qrs-collection-heading button').click(); await tick();
+console.log('LAB SETTINGS OK — failed verify preserves draft, Enter verifies, toggle auto-saves, requests navigates');
+
 button('订阅管理', container.querySelector('.qrs-settings-tabs')).click();
 await tick();
 if (!container.querySelector('.qrs-subscriptions[aria-label="管理订阅"]')) throw new Error('subscription manager missing from settings');
