@@ -98,7 +98,9 @@ export function normalizeQiaomuEntry(raw, channelKey) {
   return {
     key: `qiaomu:${raw.id}`,
     id: raw.id,
-    channelKey: typeof raw.sourceId === 'string' && raw.sourceId !== '' && channelKey !== 'qiaomu' ? `qiaomu:${raw.sourceId}` : channelKey,
+    channelKey: typeof raw.sourceId === 'string' && raw.sourceId !== '' ? `qiaomu:${raw.sourceId}` : channelKey,
+    sourceId: typeof raw.sourceId === 'string' ? raw.sourceId : undefined,
+    channelName: typeof raw.sourceName === 'string' ? raw.sourceName : undefined,
     title: typeof raw.title === 'string' ? raw.title : '(untitled)',
     titleZh: typeof raw.titleZh === 'string' && raw.titleZh !== '' ? raw.titleZh : undefined,
     author: typeof raw.author === 'string' ? raw.author : undefined,

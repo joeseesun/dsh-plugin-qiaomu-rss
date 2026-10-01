@@ -1,8 +1,17 @@
 /** Smoke tests for the dependency-free host modules. Run: node tests/smoke.mjs */
 import assert from 'node:assert';
+import { normalizeQiaomuEntry } from '../src/host/qiaomu.js';
+const curated = normalizeQiaomuEntry({ id:'episode', sourceId:'latentspace', title:'Episode' }, 'qiaomu');
+assert.equal(curated.channelKey, 'qiaomu:latentspace');
+assert.equal(curated.sourceId, 'latentspace');
 import { parseFeed, parseOpml, buildOpml } from '../src/host/feeds.js';
 import { sanitizeHtml, htmlToText, firstImageUrl } from '../src/host/sanitize.js';
 import { markdownToHtml, htmlToMarkdown } from '../src/host/markdown.js';
+import { chooseReadingContextVersion } from '../src/host/reading-context-version.js';
+
+assert.equal(chooseReadingContextVersion('translation', { translation:{content:''}, rewrite:{content:'改写正文'}, original:{content:'Original'} }), 'rewrite');
+assert.equal(chooseReadingContextVersion('rewrite', { rewrite:{content:'  '}, original:{content:'Original'} }), 'original');
+assert.equal(chooseReadingContextVersion('original', { original:{content:''} }), undefined);
 
 const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/">
@@ -35,6 +44,9 @@ assert.equal(first.title, 'First post');
 assert.equal(first.url, 'https://example.com/first');
 assert.match(first.key, /^feed:[0-9a-f]{32}$/);
 assert.equal(first.image, 'https://example.com/thumb.jpg');
+const mediaFeed = parseFeed(`<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><item><title>Episode</title><link>https://example.com/episode</link><media:thumbnail url="https://example.com/cover.jpg"/><enclosure url="https://example.com/episode.mp3" type="audio/mpeg"/></item></channel></rss>`, 'https://example.com/podcast.xml');
+assert.equal(mediaFeed.entries[0].image, 'https://example.com/cover.jpg');
+assert.equal(mediaFeed.entries[0].audio, 'https://example.com/episode.mp3');
 assert.ok(!first.html.includes('script'), 'script stripped');
 assert.ok(!first.html.includes('onerror'), 'onerror stripped');
 assert.match(first.html, /<em>content<\/em>/);
