@@ -95,7 +95,7 @@ export class RssService extends TypertRemoteService {
       unread: countUnread(this.entriesOf('feeds:all')),
       total: 0,
     });
-    if (this.collection.settings().enabled || this.collection.snapshot().jobs.length) channels.push({ key: 'collection', kind: 'collection', name: '申请收录', unread: 0, total: this.collection.snapshot().jobs.length });
+    if (this.collection.settings().enabled || this.collection.snapshot().jobs.length) channels.push({ key: 'collection', kind: 'collection', name: '我的申请', unread: 0, total: this.collection.snapshot().jobs.length });
     channels.push({ key: 'podscribe', kind: 'podcast', name: '海外播客原文', unread: countUnread(data.podcastEntries ?? []), total: (data.podcastEntries ?? []).length });
     const groups = new Map();
     for (const sub of data.subscriptions) {

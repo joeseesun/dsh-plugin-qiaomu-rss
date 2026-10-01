@@ -3,22 +3,36 @@ import { Copy, Link2, RefreshCw, ExternalLink, RotateCcw, Settings } from 'lucid
 import { collectionCopy } from './collection-copy.js';
 
 export function CollectionSettings({ api, notify, onOpenRequests }) {
-  const copy = collectionCopy(); const [state, setState] = useState(null); const [invite, setInvite] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
+  const copy = collectionCopy();
+  const [state, setState] = useState(null), [invite, setInvite] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
   useEffect(() => { let live = true; api.getCollectionSettings().then(result => { if (live) setState(result); }).catch(error => { if (live) setError(error.message); }); return () => { live = false; }; }, [api]);
-  return <section aria-label={copy.lab}><div className="qrs-settings-intro"><h2>{copy.title}</h2><p>{copy.intro}</p></div>
-    <div className="qrs-settings-card"><p>{copy.disclosure}</p>
-      {state && <form onSubmit={async event => { event.preventDefault(); setBusy(true); setError(''); try {
-        const result = await api.configureCollection({ enabled: state.enabled, ...(invite.trim() ? { invite: invite.trim() } : {}) });
-        setState(result); setInvite(''); window.dispatchEvent(new Event('qrs-collection-changed')); notify(copy.configured);
-      } catch (error) { setError(error.message); } finally { setBusy(false); } }}>
-        <label className="qrs-collection-toggle"><input type="checkbox" checked={state.enabled} disabled={busy} onChange={event => setState({ ...state, enabled: event.target.checked })} />{copy.enabled}</label>
-        <label className="qrs-settings-url"><span>{copy.invite}</span><input type="password" autoComplete="off" aria-label={copy.invite} placeholder={copy.inviteHint} value={invite} disabled={busy} onChange={event => setInvite(event.target.value)} /></label>
-        <p role="status">{state.verified ? copy.verified : copy.unverified}</p>
-        <button className="qrs-collection-button" type="submit" disabled={busy || (!state.verified && !invite.trim())}>{busy ? copy.saving : invite.trim() ? copy.verify : copy.save}</button>
-      </form>}
-      {state?.verified && onOpenRequests && <button className="qrs-collection-button" onClick={onOpenRequests}>{copy.jobs}</button>}
-      {error && <p role="alert" className="qrs-collection-error">{error}</p>}
-    </div>
+  const save = async patch => {
+    setBusy(true); setError('');
+    try {
+      const result = await api.configureCollection({ enabled: state.enabled, ...patch });
+      setState(result); if (patch.invite) setInvite('');
+      window.dispatchEvent(new Event('qrs-collection-changed'));
+      notify(patch.invite ? copy.verified : result.enabled ? copy.enabledNotice : copy.disabledNotice);
+    } catch (error) { setError(error.message); } finally { setBusy(false); }
+  };
+  return <section aria-label={copy.lab} className="qrs-lab-settings">
+    <div className="qrs-settings-intro"><h2>{copy.title}</h2><p>{copy.intro}</p></div>
+    {state ? <div className="qrs-lab-rows">
+      <div className="qrs-lab-row">
+        <div className="qrs-lab-info"><h3>{copy.enabled}</h3><p id="qrs-lab-enable-hint">{state.verified ? copy.enableHint : copy.enableFirst}</p></div>
+        <label className="qrs-switch qrs-lab-switch"><input type="checkbox" role="switch" aria-label={copy.enabled} aria-describedby="qrs-lab-enable-hint" checked={state.enabled} disabled={busy || !state.verified} onChange={event => void save({ enabled: event.target.checked })} /><span aria-hidden="true" /></label>
+      </div>
+      <form className="qrs-lab-row" onSubmit={event => { event.preventDefault(); if (!busy && invite.trim()) void save({ invite: invite.trim() }); }}>
+        <div className="qrs-lab-info"><h3 id="qrs-lab-invite-label">{copy.invite}</h3><p id="qrs-lab-invite-status" role="status" aria-live="polite">{invite.trim() ? copy.inviteDraft : state.verified ? copy.verified : copy.unverified}</p></div>
+        <div className="qrs-lab-controls"><input type="password" autoComplete="off" aria-labelledby="qrs-lab-invite-label" aria-describedby="qrs-lab-invite-status" placeholder={state.verified ? copy.replaceInvite : copy.inviteHint} value={invite} disabled={busy} onChange={event => { setInvite(event.target.value); setError(''); }} /><button className="qrs-collection-button" type="submit" disabled={busy || !invite.trim()}>{busy ? copy.saving : copy.verify}</button></div>
+      </form>
+      <div className="qrs-lab-row">
+        <div className="qrs-lab-info"><h3>{copy.myRequests}</h3><p>{copy.requestsHint}</p></div>
+        <button className="qrs-collection-button" type="button" disabled={!onOpenRequests || busy} onClick={onOpenRequests}>{copy.viewRequests}</button>
+      </div>
+      <p className="qrs-lab-note">{copy.disclosure}</p>
+    </div> : !error && <p className="qrs-settings-hint" role="status">{copy.loading}</p>}
+    {error && <p role="alert" className="qrs-collection-error">{error}</p>}
   </section>;
 }
 export function CollectionPanel({ api, onOpen, onSettings, notify, revision = 0 }) {
