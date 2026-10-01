@@ -17,7 +17,7 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node tests/smoke.mjs && node tests/article-context.mjs && node tests/video.mjs && node tests/reading-version.mjs && node tests/render.mjs && node tests/harness-integration.mjs && node tests/companion-draft.mjs"
+    "test": "node tests/smoke.mjs && node tests/article-context.mjs && node tests/reading-scope.mjs && node tests/video.mjs && node tests/video-player.mjs && node tests/video-player-client.mjs && node tests/reading-version.mjs && node tests/podscribe.mjs && node tests/render.mjs && node tests/harness-integration.mjs && node tests/companion-draft.mjs"
   },
   "main": "lib/index.js",
   "exports": {

@@ -102,7 +102,9 @@ const api = new Proxy({}, {
         ? { entries: [{ key: 'qiaomu:3', channelName: '乔木博客', title: 'Earlier article', publishedAt: '2026-09-01T10:00:00.000Z', read: true }], hasMore: false }
         : { entries: ARTICLES, hasMore: true, nextCursor: 'older' });
       if (name === 'getArticle') { const result = {
-        article: { key: 'qiaomu:1', title: ARTICLES[0].title, titleZh: ARTICLES[0].titleZh, channelName: '乔木博客', url: 'https://example.org/a', author: 'Adam', publishedAt: '2026-09-07T10:00:00.000Z', read: false, favorite: false },
+        article: name === 'getArticle' && args[0]?.key === 'qiaomu:2'
+          ? { key: 'qiaomu:2', title: ARTICLES[1].title, url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', read: true, favorite: true }
+          : { key: 'qiaomu:1', title: ARTICLES[0].title, titleZh: ARTICLES[0].titleZh, channelName: '乔木博客', url: 'https://example.org/a', audio: 'https://example.org/episode.mp3', author: 'Adam', publishedAt: '2026-09-07T10:00:00.000Z', read: false, favorite: false },
         html: '<p>Full <strong>body</strong> text</p>',
         versions: {
           translation: generatedOnce ? { available: true, source: 'local', markdown: '# 本地译文标题\n\n本地生成的译文正文' } : { available: false, status: 'missing' },
@@ -140,6 +142,7 @@ console.log('LAYOUT OK — channel button, filter pills, resize handle, reader, 
 // ---- list rows ------------------------------------------------------------
 const rows = [...container.querySelectorAll('.qrs-entry')];
 if (rows.length !== 2) throw new Error(`expected 2 entries, got ${rows.length}`);
+if (rows[0].querySelector('.qrs-source-name')?.textContent !== ARTICLES[0].channelName || rows[1].querySelector('.qrs-source-name')?.textContent !== ARTICLES[1].channelName) throw new Error('different sources sharing a channel key must remain visible');
 if (!rows[0].querySelector('.qrs-entry-meta .qrs-date')?.textContent) throw new Error('date missing in entry meta');
 if (!rows[0].querySelector('h3')?.textContent.includes('研究加速')) throw new Error('localized title missing');
 if (!rows[0].querySelector('.qrs-summary')?.textContent.includes('Research acceleration')) throw new Error('summary excerpt missing');
@@ -164,6 +167,7 @@ if (!mode || mode.options.length !== 3) throw new Error('reading-version select 
 for (const selector of ['.qrs-reader-toolbar', '.qrs-reader-nav', '.qrs-actions']) if (!container.querySelector(selector)) throw new Error(`missing ${selector}`);
 if (container.querySelectorAll('.qrs-actions .qrs-icon').length !== 4) throw new Error('reader action icons missing');
 if (!apiCalls.includes('setRead')) throw new Error('opening an unread article did not mark it read');
+if (container.querySelector('.qrs-article .qrs-article-audio audio')?.getAttribute('src') !== 'https://example.org/episode.mp3') throw new Error('podcast player did not open with article');
 console.log('READER OK — head chip, h1, prose, version select, nav, four reader actions');
 
 // ---- version switching ----------------------------------------------------
@@ -319,7 +323,19 @@ if (!podcastTab) throw new Error('podcast discovery category missing');
 podcastTab.click();
 await tick();
 if (!reopened.textContent.includes('73 个结果') || !reopened.querySelector('.qrs-discover-row .qrs-discover-add')) throw new Error('podcast feeds are not available to subscribe');
+const transcriptTab = [...reopened.querySelectorAll('.qrs-discover-categories button')].find((node) => node.textContent === '海外播客原文');
+if (!transcriptTab) throw new Error('transcript discovery category missing');
+transcriptTab.click();
+await tick();
+if (!reopened.querySelector('input[aria-label="搜索海外播客"]') || !reopened.textContent.includes('获取完整原文')) throw new Error('transcript search is not available');
 console.log('DISCOVERY OK — compact rows, category filtering, inline action');
+
+container.querySelector('.qrs-discover .qrs-discover-close')?.click();
+container.querySelectorAll('.qrs-entry')[1].click();
+for (let i = 0; i < 4; i += 1) await tick();
+if (container.querySelector('.qrs-video-frame')?.getAttribute('src') !== 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ') throw new Error('YouTube article link did not render video player');
+if (container.querySelector('audio')) throw new Error('previous article audio must be removed when switching articles');
+if (!container.querySelector('.qrs-article .qrs-video-frame')) throw new Error('video player must be inside article details');
 
 console.log('CLIENT RENDER TESTS PASSED');
 process.exit(0);

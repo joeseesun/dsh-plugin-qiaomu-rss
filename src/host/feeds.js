@@ -63,23 +63,23 @@ export function excerptOf(html, limit = 180) {
 }
 
 function mediaAssetOf(node) {
+  const asset = {};
   for (const name of ['thumbnail', 'content']) {
     for (const media of findAll(node, name)) {
       const url = attrOf(media, 'url');
       const medium = attrOf(media, 'medium');
       const type = attrOf(media, 'type') ?? '';
-      if (url && (medium === 'image' || type.startsWith('image/') || name === 'thumbnail')) return { image: url };
-      if (url && (medium === 'audio' || type.startsWith('audio/'))) return { audio: url };
+      if (url && !asset.image && (medium === 'image' || type.startsWith('image/') || name === 'thumbnail')) asset.image = url;
+      if (url && !asset.audio && (medium === 'audio' || type.startsWith('audio/'))) asset.audio = url;
     }
   }
-  const enclosure = find(node, 'enclosure');
-  if (enclosure) {
+  for (const enclosure of childrenOf(node, 'enclosure')) {
     const url = attrOf(enclosure, 'url');
     const type = attrOf(enclosure, 'type') ?? '';
-    if (url && type.startsWith('audio/')) return { audio: url };
-    if (url && type.startsWith('image/')) return { image: url };
+    if (url && !asset.audio && type.startsWith('audio/')) asset.audio = url;
+    if (url && !asset.image && type.startsWith('image/')) asset.image = url;
   }
-  return {};
+  return asset;
 }
 
 function dateOf(node, isAtom) {

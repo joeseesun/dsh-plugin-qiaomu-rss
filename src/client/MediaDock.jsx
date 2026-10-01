@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export function MediaDock({ episode, onOpen, onClose }) {
+export function MediaDock({ episode }) {
   const audio = useRef();
   const [error, setError] = useState('');
   useEffect(() => {
@@ -21,10 +21,8 @@ export function MediaDock({ episode, onOpen, onClose }) {
     };
   }, [episode]);
   if (!episode) return null;
-  return <aside aria-label="正在播放" style={{ padding:10, borderTop:'1px solid var(--dsw-alias-border-l1)', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
-    <button type="button" className="qmrss-btn" onClick={() => onOpen(episode.key)} title="返回节目文章">{episode.titleZh || episode.title}</button>
-    <audio ref={audio} controls autoPlay preload="metadata" src={episode.audio} onError={() => setError('音频暂不可用，请重试或打开原文')} />
-    <button type="button" className="qmrss-btn" onClick={onClose}>关闭播放器</button>
-    {error && <div role="alert">{error} <button type="button" className="qmrss-btn" onClick={() => { setError(''); audio.current?.load(); }}>重试音频</button></div>}
-  </aside>;
+  return <div className="qrs-article-audio" aria-label="文章音频" style={{ margin:'0 0 26px' }}>
+    <audio ref={audio} controls preload="metadata" src={episode.audio} style={{ display:'block', width:'100%' }} aria-label={`${episode.titleZh || episode.title} 音频`} onError={() => setError('音频暂不可用，请重试或打开原文')} />
+    {error && <div role="alert" style={{ marginTop:8 }}>{error} <button type="button" className="qmrss-btn" onClick={() => { setError(''); audio.current?.load(); }}>重试音频</button>{episode.url && <a className="qmrss-btn" href={episode.url} target="_blank" rel="noopener noreferrer">打开原文</a>}</div>}
+  </div>;
 }

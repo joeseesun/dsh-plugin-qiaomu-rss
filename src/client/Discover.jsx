@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import blogCatalog from '../data/independent-blogs.json';
 import podcastCatalog from '../data/podcast-feeds.json';
 import { Icon } from './icons.jsx';
+import { PodcastDiscovery } from './PodcastDiscovery.jsx';
 
 const featured = [
   ['潮流周刊 · Tw93','https://weekly.tw93.fun/rss.xml'],
@@ -21,13 +22,13 @@ const wechat = [
 ].map(([name,id]) => ({ name,url:`https://rss.t5t6.com/weread/MP_WXS_${id}.xml`,category:'微信公众号' }));
 const catalog = [...featured,...wechat,...podcastCatalog.items.map((entry) => ({ ...entry, category:'播客' })),...blogCatalog.items.map((entry) => ({ ...entry, category:'独立博客' }))];
 const topics = [...new Set(blogCatalog.items.flatMap((entry) => entry.tags ?? []))].sort();
-const categories = ['全部','精选作者','微信公众号','播客','独立博客'];
+const categories = ['全部','精选作者','微信公众号','播客','海外播客原文','独立博客'];
 function feedHost(url) {
   try { return new URL(url).hostname.replace(/^www\./, ''); }
   catch { return url; }
 }
 
-export function Discover({ api, onClose, onAdded, onRead }) {
+export function Discover({ api, onClose, onAdded, onRead, onPodcastImported }) {
   const [query,setQuery] = useState('');
   const [category,setCategory] = useState('全部');
   const [topic,setTopic] = useState('');
@@ -63,13 +64,13 @@ export function Discover({ api, onClose, onAdded, onRead }) {
         <button type="button" className="qrs-icon" aria-label="关闭探索" title="关闭" onClick={onClose}><Icon name="x" /></button>
       </header>
       <div className="qrs-discover-filters">
-        <label className="qrs-discover-search"><Icon name="search" /><input autoFocus aria-label="搜索推荐源" placeholder="搜索作者、播客或 RSS 地址" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+        {category !== '海外播客原文' && <label className="qrs-discover-search"><Icon name="search" /><input autoFocus aria-label="搜索推荐源" placeholder="搜索作者、播客或 RSS 地址" value={query} onChange={(event) => setQuery(event.target.value)} /></label>}
         <div className="qrs-discover-categories" role="group" aria-label="推荐源分类">
           {categories.map((name) => <button key={name} type="button" className={category === name ? 'active' : ''} aria-pressed={category === name} onClick={() => { setCategory(name); if (name !== '全部' && name !== '独立博客') setTopic(''); }}>{name}</button>)}
         </div>
-        <div className="qrs-discover-filter-line"><span>{visible.length} 个结果</span><select aria-label="主题标签" value={topic} onChange={(event) => setTopic(event.target.value)} disabled={category !== '全部' && category !== '独立博客'}><option value="">全部主题</option>{topics.map((tag) => <option key={tag}>{tag}</option>)}</select></div>
+        {category !== '海外播客原文' && <div className="qrs-discover-filter-line"><span>{visible.length} 个结果</span><select aria-label="主题标签" value={topic} onChange={(event) => setTopic(event.target.value)} disabled={category !== '全部' && category !== '独立博客'}><option value="">全部主题</option>{topics.map((tag) => <option key={tag}>{tag}</option>)}</select></div>}
       </div>
-      <div className="qrs-discover-results">
+      {category === '海外播客原文' ? <PodcastDiscovery api={api} onImported={onPodcastImported} /> : <div className="qrs-discover-results">
         {visible.slice(0,limit).map((entry,index) => {
           const subscription = subscribed.find((sub) => sub.url === entry.url);
           return <div key={`${entry.url}:${index}`} className="qrs-discover-row">
@@ -81,7 +82,7 @@ export function Discover({ api, onClose, onAdded, onRead }) {
         })}
         {visible.length > limit && <button type="button" className="qrs-discover-more" onClick={() => setLimit((current) => current + 40)}>显示更多</button>}
         {!visible.length && <div className="qrs-discover-empty">没有找到匹配的订阅源</div>}
-      </div>
+      </div>}
       <footer className="qrs-discover-foot">
         {message && <div className="qrs-discover-message" role="status">{message}</div>}
         <span>独立博客来自 <a href={blogCatalog.source} target="_blank" rel="noreferrer">Tim Qian 目录</a> · MIT</span>

@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { companionCopy } from './companion-copy.js';
 import { Icon } from './icons.jsx';
-import { readQuickPrompts } from './quick-prompts.js';
+import { readQuickPrompts, scopedQuickPrompts } from './quick-prompts.js';
 
 /** Reader on the left; Harness's own conversation stays mounted on the right. */
-export function AskArticle({ api, context, onClose, onManagePrompts, SessionProvider, renderSlot }) {
+export function AskArticle({ api, context, onClose, onManagePrompts, onClearSelection, SessionProvider, renderSlot }) {
+  const copy = companionCopy();
   const [workspaceId, setWorkspaceId] = useState(() => api.defaultChatWorkspace?.());
   const [chat, setChat] = useState(null);
   const [error, setError] = useState('');
@@ -14,6 +16,8 @@ export function AskArticle({ api, context, onClose, onManagePrompts, SessionProv
   const [attachedVersion, setAttachedVersion] = useState(context.version);
   const [prompts, setPrompts] = useState(readQuickPrompts);
   const [promptMount, setPromptMount] = useState(null);
+  const [quoteMount, setQuoteMount] = useState(null);
+  const [expandedQuote, setExpandedQuote] = useState(false);
   const [emptyConversation, setEmptyConversation] = useState(false);
   const [sendingPrompt, setSendingPrompt] = useState(false);
   const chatRoot = useRef(null);
@@ -21,6 +25,12 @@ export function AskArticle({ api, context, onClose, onManagePrompts, SessionProv
   const owned = useRef(null);
   const generation = useRef(0);
   const started = useRef(false);
+  const bindingQueue = useRef(Promise.resolve());
+  const bindContext = request => {
+    const pending = bindingQueue.current.catch(() => {}).then(() => api.setReadingContext(request));
+    bindingQueue.current = pending;
+    return pending;
+  };
   const contextKey = [context.key, context.version, context.selection || '', context.quoteId || ''].join('|');
 
   useEffect(() => {
@@ -29,27 +39,41 @@ export function AskArticle({ api, context, onClose, onManagePrompts, SessionProv
   }, [api, workspaceId]);
   useEffect(() => () => { generation.current += 1; owned.current?.release(); }, []);
   useEffect(() => { const reload = () => setPrompts(readQuickPrompts()); window.addEventListener('qrs-prompts-changed', reload); return () => window.removeEventListener('qrs-prompts-changed', reload); }, []);
-  useEffect(() => { setActionError(''); }, [contextKey]);
+  useEffect(() => { setActionError(''); setExpandedQuote(false); }, [contextKey]);
   useEffect(() => {
     if (!chat || !SessionProvider) return;
     const root = chatRoot.current;
     if (!root) return;
     const mount = document.createElement('div');
     mount.className = 'qrs-companion-prompt-anchor';
+    const quote = document.createElement('div');
+    quote.className = 'qrs-companion-quote-anchor';
     let placed = false;
+    let quotePlaced = false;
     const place = () => {
       const seat = root.querySelector('[data-composer-seat]');
       if (seat?.parentNode) {
         if (mount.nextSibling !== seat) seat.parentNode.insertBefore(mount, seat);
         if (!placed) { placed = true; setPromptMount(mount); }
       }
+      const card = root.querySelector('[data-composer-card]');
+      if (card && quote.parentNode !== card) card.insertBefore(quote, card.firstChild);
+      if (card && !quotePlaced) { quotePlaced = true; setQuoteMount(quote); }
       setEmptyConversation(root.querySelector('[data-content-phase]')?.getAttribute('data-content-phase') === 'hero');
     };
     const observer = new MutationObserver(place);
     observer.observe(root, { childList:true, subtree:true, attributes:true, attributeFilter:['data-content-phase'] });
     place();
-    return () => { observer.disconnect(); mount.remove(); setPromptMount(null); setEmptyConversation(false); };
+    return () => { observer.disconnect(); mount.remove(); quote.remove(); setPromptMount(null); setQuoteMount(null); setEmptyConversation(false); };
   }, [chat, SessionProvider]);
+
+  useEffect(() => {
+    const card = quoteMount?.parentElement;
+    if (!card) return;
+    // A typed native submission must also wait for the current selection binding.
+    card.inert = attached !== contextKey || Boolean(error);
+    return () => { card.inert = false; };
+  }, [quoteMount, attached, contextKey, error]);
 
   async function start(fresh = false) {
     if (!workspaceId) return;
@@ -68,7 +92,7 @@ export function AskArticle({ api, context, onClose, onManagePrompts, SessionProv
         acquired = await api.openChat({ workspaceId });
       }
       if (current !== generation.current) { acquired.release(); return; }
-      const binding = await api.setReadingContext({ sessionId: acquired.sessionId, ...context });
+      const binding = await bindContext({ sessionId: acquired.sessionId, ...context });
       if (current !== generation.current) { acquired.release(); return; }
       owned.current?.release();
       owned.current = acquired;
@@ -94,7 +118,7 @@ export function AskArticle({ api, context, onClose, onManagePrompts, SessionProv
     if (!chat || attached === contextKey) return;
     let stale = false;
     setError('');
-    api.setReadingContext({ sessionId: chat.sessionId, ...context })
+    bindContext({ sessionId: chat.sessionId, ...context })
       .then((binding) => { if (!stale) { setAttached(contextKey); setAttachedVersion(binding?.version ?? context.version); } })
       .catch(cause => { if (!stale) setError(cause?.message ?? String(cause)); });
     return () => { stale = true; };
@@ -117,7 +141,7 @@ export function AskArticle({ api, context, onClose, onManagePrompts, SessionProv
     </header>
     <div className="qrs-companion-context">
       <strong>{context.title}</strong>
-      <small>{({ original: '原文', translation: '译文', rewrite: '乔木改写' })[attached === contextKey ? attachedVersion : context.version]}{attached === contextKey && attachedVersion !== context.version ? '可用，当前版本暂缺' : ''} · 当前文章</small>
+      <small>{({ original: '原文', translation: '译文', rewrite: '乔木改写' })[attached === contextKey ? attachedVersion : context.version]}{attached === contextKey && attachedVersion !== context.version ? '可用，当前版本暂缺' : ''} · {context.selection ? copy.background : copy.article}</small>
     </div>
     {error && <div className="qrs-companion-error" role="alert"><strong>{error.includes('没有可用正文') ? '暂时无法伴读这篇文章' : '伴读连接未完成'}</strong><p>{error.includes('没有可用正文') ? '这篇文章目前没有可引用的正文。你可以稍后再试，或先阅读其他文章。' : error}</p><button type="button" onClick={() => void start()}>重新连接</button></div>}
     {actionError && <div className="qrs-companion-notice" role="status"><span>{actionError}</span><button type="button" aria-label="关闭提示" onClick={() => setActionError('')}><Icon name="x" size={13} /></button></div>}
@@ -139,9 +163,15 @@ export function AskArticle({ api, context, onClose, onManagePrompts, SessionProv
         <p>一个细节，一处疑问，或一句不同意的话。<br />写下来，我们接着读。</p>
       </div>}
     </div>}
+    {quoteMount && context.selection && createPortal(<section className="qrs-companion-quote" aria-label={copy.passage} aria-busy={attached !== contextKey}>
+      <div className="qrs-companion-quote-heading"><strong>{copy.selected} · {Array.from(context.selection).length} {copy.characters}</strong><span>{attached === contextKey ? copy.scope : copy.syncing}</span>
+        <button type="button" aria-label={copy.remove} title={copy.removeHint} disabled={sendingPrompt || !onClearSelection} onClick={onClearSelection}><Icon name="x" size={14} /></button>
+      </div>
+      <blockquote className={expandedQuote ? 'is-expanded' : ''}>{context.selection}</blockquote>
+      {context.selection.length > 100 && <button type="button" className="qrs-companion-quote-expand" aria-expanded={expandedQuote} onClick={() => setExpandedQuote(value => !value)}>{expandedQuote ? copy.collapse : copy.expand}</button>}
+    </section>, quoteMount)}
     {promptMount && createPortal(<div className="qrs-companion-prompt-strip" role="group" aria-label="快捷提示词">
-      {context.selection && attached === contextKey && <span className="qrs-companion-selection-chip" title="选段已加入本次伴读上下文">选段已加入上下文</span>}
-      <div className="qrs-companion-prompt-scroll">{prompts.map(item => <button type="button" className="qrs-companion-prompt-ghost" key={item.id} title={item.body} aria-label={`直接发送：${item.title}`} disabled={sendingPrompt || attached !== contextKey} onClick={() => void sendQuickPrompt(item)}>{item.title}</button>)}</div>
+      <div className="qrs-companion-prompt-scroll">{scopedQuickPrompts(prompts, context.selection).map(item => <button type="button" className="qrs-companion-prompt-ghost" key={item.id} title={item.body} aria-label={`直接发送：${item.title}`} disabled={sendingPrompt || attached !== contextKey} onClick={() => void sendQuickPrompt(item)}>{item.title}</button>)}</div>
       <button type="button" className="qrs-companion-add-prompt" aria-label="新增快捷提示词" title="新增快捷提示词" onClick={onManagePrompts}><Icon name="plus" size={14} /></button>
     </div>, promptMount)}
   </aside>;

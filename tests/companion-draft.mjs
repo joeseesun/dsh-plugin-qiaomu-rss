@@ -24,6 +24,7 @@ const sent = [];
 const bound = [];
 let nativeMounts = 0;
 let managedPrompts = 0;
+let cleared = 0;
 const chat = { sessionId: 'session-1', reference: {}, release() {}, insertContext(text) { inserted.push(text); }, async sendPrompt(text, allowed) { sent.push({ text, allowed }); } };
 const api = {
   defaultChatWorkspace: () => 'default',
@@ -33,12 +34,12 @@ const api = {
 const SessionProvider = ({ children }) => children;
 function NativeView() {
   React.useEffect(() => { nativeMounts++; }, []);
-  return React.createElement('div', { 'data-content-phase':'hero' }, React.createElement('div', { 'data-conversation-scroll':'' }, React.createElement('div', { 'data-composer-seat':'' }, '原生对话')));
+  return React.createElement('div', { 'data-content-phase':'hero' }, React.createElement('div', { 'data-conversation-scroll':'' }, React.createElement('div', { 'data-composer-seat':'' }, React.createElement('div', { 'data-composer-card':'' }, React.createElement('textarea', { defaultValue:'保留我的草稿' }), '原生对话'))));
 }
 const renderSlot = () => React.createElement(NativeView);
 const root = createRoot(document.getElementById('root'));
 const render = context => root.render(React.createElement(AskArticle, {
-  api, context, SessionProvider, renderSlot, onClose() {}, onManagePrompts() { managedPrompts++; },
+  api, context, SessionProvider, renderSlot, onClearSelection() { cleared++; }, onClose() {}, onManagePrompts() { managedPrompts++; },
 }));
 render({ key: 'article-1', title: '文章', version: 'original', selection: '第一段', quoteId: 1 });
 for (let i = 0; i < 6; i++) await tick();
@@ -58,12 +59,19 @@ assert.ok(document.querySelector('.qrs-companion-opening'), 'the invitation retu
 const strip = document.querySelector('.qrs-companion-prompt-strip');
 assert.ok(strip, 'quick prompts should appear above the native composer');
 assert.equal(strip.parentElement.nextElementSibling?.getAttribute('data-composer-seat'), '', 'prompt strip must precede composer seat');
-assert.equal(strip.querySelector('.qrs-companion-selection-chip')?.textContent, '选段已加入上下文');
+assert.equal(document.querySelector('.qrs-companion-selection-chip'), null);
+assert.equal(document.querySelector('.qrs-companion-quote blockquote').textContent, '第一段');
+assert.equal(document.querySelector('.qrs-companion-quote-anchor').parentElement.hasAttribute('data-composer-card'), true);
+assert.equal(document.querySelector('textarea').value, '保留我的草稿');
+assert.ok(strip.textContent.includes('翻译选段'));
+assert.ok(strip.textContent.includes('概括选段'));
+document.querySelector('[aria-label="移除选段"]').click();
+assert.equal(cleared, 1);
 strip.querySelector('[aria-label="新增快捷提示词"]').click();
 assert.equal(managedPrompts, 1, 'the trailing plus opens quick prompt management');
 strip.querySelector('button').click();
 await tick();
-assert.ok(sent[0].text.includes('三点概括'), 'quick prompt sends directly');
+assert.ok(sent[0].text.includes('三点概括选中段落'), 'quick prompt sends only a selection summary');
 assert.equal(sent[0].allowed, undefined, 'quick prompt does not replace a composer draft');
 render({ key: 'article-1', title: '文章', version: 'original', selection: '第一段', quoteId: 1 });
 await tick();
@@ -79,5 +87,35 @@ render({ key: 'article-1', title: '文章', version: 'original', selection: long
 for (let i = 0; i < 4; i++) await tick();
 assert.equal(bound.at(-1).selection, longSelection);
 assert.equal(inserted.length, 0, 'even a long selection stays exclusively in reading context');
+assert.equal(document.querySelector('.qrs-companion-quote blockquote').textContent, longSelection);
+document.querySelector('.qrs-companion-quote-expand').click();
+await tick();
+assert.ok(document.querySelector('.qrs-companion-quote blockquote').classList.contains('is-expanded'));
+render({ key: 'article-1', title: '文章', version: 'original', selection: '' });
+for (let i = 0; i < 4; i++) await tick();
+assert.equal(bound.at(-1).selection, '');
+assert.equal(document.querySelector('.qrs-companion-quote'), null);
+assert.ok(document.querySelector('.qrs-companion-prompt-strip').textContent.includes('翻译全文'));
+assert.equal(document.querySelector('textarea').value, '保留我的草稿');
+assert.equal(nativeMounts, 1);
+// Serial context writes keep a slow earlier selection from overwriting a newer one.
+let releaseSlow;
+api.setReadingContext = async context => {
+  bound.push(context);
+  if (context.selection === '慢选段') await new Promise(resolveSlow => { releaseSlow = resolveSlow; });
+};
+render({ key: 'article-1', title: '文章', version: 'original', selection: '慢选段', quoteId: 4 });
+await tick();
+assert.equal(document.querySelector('[data-composer-card]').inert, true, 'manual sends wait for selection binding');
+render({ key: 'article-1', title: '文章', version: 'original', selection: '新选段', quoteId: 5 });
+await tick();
+assert.equal(bound.at(-1).selection, '慢选段', 'the newer binding waits for the slow write');
+releaseSlow();
+for (let i = 0; i < 4; i++) await tick();
+assert.equal(bound.at(-1).selection, '新选段');
+assert.equal(document.querySelector('[data-composer-card]').inert, false);
+assert.equal(document.querySelector('.qrs-companion-quote blockquote').textContent, '新选段');
+assert.equal(document.querySelector('textarea').value, '保留我的草稿');
 root.unmount();
+assert.equal(document.querySelector('.qrs-companion-quote-anchor'), null);
 console.log('Companion draft: complete selection stays in context and leaves composer untouched');

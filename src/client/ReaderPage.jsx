@@ -17,10 +17,11 @@ import { SettingsPage } from './SettingsPage.jsx';
 import { resolveReadingVersion } from './reading-version.js';
 import { SubscriptionManager } from './SubscriptionManager.jsx';
 import { Discover } from './Discover.jsx';
+import { VideoPlayer } from './VideoPlayer.jsx';
 import { MediaDock } from './MediaDock.jsx';
 import { quoteRange, selectedPassage } from './selection.js';
 import { AskArticle } from './AskArticle.jsx';
-import { youtubeEmbedUrl } from '../video.js';
+import { articleAudioUrl, articleVideoEmbed } from '../video.js';
 import { printArticle } from './print-article.js';
 import REFINEMENTS from './refinements.css';
 
@@ -109,6 +110,8 @@ const PANEL_CSS = `
 .qrs-prose a{color:var(--qrs-accent);text-underline-offset:3px}
 .qrs-root[data-images=false] .qrs-prose img{display:none}
 .qrs-video-frame{display:block;width:100%;aspect-ratio:16/9;min-height:200px;margin:0 0 26px;border:0;border-radius:8px;background:#000}
+/* Electron's internal iframe needs flex layout to fill the webview. */
+webview.qrs-video-frame{display:flex}
 .qrs-missing{margin-top:24px;padding:22px;border:1px dashed var(--qrs-border-strong);border-radius:10px;text-align:center;color:var(--qrs-muted);font-size:13px;line-height:1.8}
 .qrs-welcome{width:min(100%,440px);margin:clamp(48px,14vh,160px) auto 48px;padding:0 28px;text-align:left}
 .qrs-welcome-brand{font-size:10px;font-weight:600;letter-spacing:.2em;color:var(--qrs-faint);margin-bottom:28px}
@@ -287,7 +290,6 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   const [focused, setFocused] = useState(false);
   const [reading, setReading] = useState(FALLBACK_READING);
   const [listWidth, setListWidth] = useState(() => Number(localStorage.getItem('qrs.listWidth')) || 300);
-  const [episode, setEpisode] = useState(null);
   const [askContext, setAskContext] = useState(null);
   const activeChannelRef = useRef(channel);
   activeChannelRef.current = channel;
@@ -400,7 +402,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
 
   useEffect(() => {
     const entry = channels.find((item) => item.key === channel);
-    if (!entry || (entry.total > 0 && (channel === 'all' || channel === 'feeds:all'))) return;
+    if (!entry || channel === 'podscribe' || (entry.total > 0 && (channel === 'all' || channel === 'feeds:all'))) return;
     const last = automaticRefresh.current.get(channel) ?? 0;
     if (Date.now() - last < (entry.total > 0 ? 15 * 60_000 : 60_000)) return;
     automaticRefresh.current.set(channel, Date.now());
@@ -514,9 +516,9 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
   const activeArticle = selected && !selected.loading ? selected : undefined;
   const versions = activeArticle?.versions;
   const active = activeArticle?.active ?? 'original';
-  const videoEmbed = youtubeEmbedUrl(activeArticle?.article?.videoUrl || '');
+  const audioUrl = articleAudioUrl(activeArticle?.article);
+  const videoEmbed = audioUrl ? null : articleVideoEmbed(activeArticle?.article);
   const currentChannel = channels.find((item) => item.key === channel);
-  const mixed = new Set(page.entries.map((entry) => entry.channelKey)).size > 1;
   const bodyHtml = useMemo(() => {
     if (!activeArticle) return '';
     if (active === 'original') return activeArticle.html ?? '';
@@ -577,7 +579,7 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
                 aria-pressed={selected?.article?.key === entry.key} onClick={() => void openArticle(entry.key)}>
                 <span className="qrs-entry-copy">
                   <span className="qrs-entry-meta">
-                    {mixed && <span className="qrs-source-name">{entry.channelName ?? ''}</span>}
+                    <span className="qrs-source-name">{entry.channelName || channels.find((item) => item.key === entry.channelKey)?.name || currentChannel?.name}</span>
                     <span className="qrs-date">{formatDate(entry.publishedAt)}</span>
                   </span>
                   <span className="qrs-entry-title">
@@ -669,8 +671,6 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
                   {appearanceOpen && <ReadingAppearance settings={reading} onChange={applyReading} onClose={() => setAppearanceOpen(false)} />}
                 </div>
               </div>
-              {videoEmbed && <iframe key={videoEmbed} className="qrs-video-frame" src={videoEmbed} title="YouTube 视频播放器" loading="lazy"
-                sandbox="allow-scripts allow-same-origin allow-presentation" allow="encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />}
               <article className="qrs-article">
                 <div className="qrs-article-head">
                   {activeArticle.article.channelName && <span>{activeArticle.article.channelName}</span>}
@@ -683,8 +683,10 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
                     ? <a href={activeArticle.article.url} target="_blank" rel="noopener noreferrer">{activeArticle.article.titleZh ?? activeArticle.article.title}</a>
                     : (activeArticle.article.titleZh ?? activeArticle.article.title)}
                 </h1>
+                {audioUrl && <MediaDock key={activeArticle.article.key} episode={{ ...activeArticle.article, audio: audioUrl }} />}
+                {videoEmbed && <VideoPlayer key={videoEmbed} embed={videoEmbed} playerUrl={activeArticle.videoPlayerUrl} />}
                 {bodyHtml
-                  ? <div ref={proseRef} className="qrs-prose" onMouseUp={captureSelection} onKeyUp={captureSelection} dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml, { baseUrl: activeArticle.article.url }) }} />
+                  ? <div ref={proseRef} className="qrs-prose" onMouseUp={captureSelection} onKeyUp={captureSelection} dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml, { baseUrl: activeArticle.article.url, maxLength: activeArticle.article.key.startsWith('podscribe:') ? 2_000_000 : undefined }) }} />
                   : (
                     <div className="qrs-missing">
                       这个版本还没有内容。
@@ -711,14 +713,13 @@ export function ReaderPage({ api, SessionProvider, renderSlot }) {
         onPointerCancel={event=>{companionDrag.current=false;event.currentTarget.dataset.dragging='false';}}
         onKeyDown={event=>{const step=event.shiftKey?10:2;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)){event.preventDefault();const next=Math.max(25,Math.min(75,companionWidth+(['ArrowLeft','ArrowUp'].includes(event.key)?step:-step)));companionWidthRef.current=next;setCompanionWidth(next);localStorage.setItem('qrs.companionWidth',String(next));}}}
         onDoubleClick={()=>{companionWidthRef.current=44;setCompanionWidth(44);localStorage.setItem('qrs.companionWidth','44');}} />}
-      {askContext && <AskArticle api={api} context={askContext} SessionProvider={SessionProvider} renderSlot={renderSlot} onClose={() => setAskContext(null)} onManagePrompts={() => { setSettingsEntry({ tab:'prompts', addPrompt:true }); setDialog('settings'); }} />}
+      {askContext && <AskArticle api={api} context={askContext} onClearSelection={() => { setPassage(null); window.getSelection()?.removeAllRanges(); setAskContext(previous => previous ? { ...previous, selection:'', quoteId:undefined } : previous); }} SessionProvider={SessionProvider} renderSlot={renderSlot} onClose={() => setAskContext(null)} onManagePrompts={() => { setSettingsEntry({ tab:'prompts', addPrompt:true }); setDialog('settings'); }} />}
       </div>
-      <MediaDock episode={episode} onOpen={openArticle} onClose={() => setEpisode(null)} />
       {pickerOpen && !dialog && (
         <ChannelPicker channels={channels} current={channel} anchor={pickerAnchor} onClose={() => setPickerOpen(false)}
           onSelect={selectChannel} onManage={() => { setPickerOpen(false); setDialog('settings'); }} />
       )}
-      {dialog === 'discover' && <Discover api={api} onClose={() => setDialog(undefined)} onAdded={loadChannels} onRead={(key) => {setDialog(undefined);selectChannel(key);}} />}
+      {dialog === 'discover' && <Discover api={api} onClose={() => setDialog(undefined)} onAdded={loadChannels} onRead={(key) => {setDialog(undefined);selectChannel(key);}} onPodcastImported={async (key) => {setDialog(undefined);selectChannel('podscribe');await loadChannels();await openArticle(key);}} />}
       {dialog === 'add' && <AddFeedDialog api={api} onClose={() => setDialog(undefined)} onDone={async () => { await loadChannels(); await loadPage(undefined, true); }} notify={notify} />}
       {dialog === 'settings' && <SettingsPage api={api} initialTab={settingsEntry.tab} startAddingPrompt={settingsEntry.addPrompt} onClose={() => { setDialog(undefined); setSettingsEntry({ tab:'reading', addPrompt:false }); }} notify={notify} />}
       {toast && <div className={`qrs-toast${toast.isError ? ' is-error' : ''}`}>{toast.message}</div>}

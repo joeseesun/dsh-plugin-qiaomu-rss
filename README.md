@@ -75,6 +75,7 @@ npm test
 - 乔木精选读取 [乔木 AI RSS](https://github.com/joeseesun/qiaomu-ai-rss) 的公开接口；个人订阅由插件抓取。
 - 内置独立博客源清单来自 [chinese-independent-blogs](https://github.com/timqian/chinese-independent-blogs)，其 MIT 声明保留在 [`vendor/chinese-independent-blogs/LICENSE`](vendor/chinese-independent-blogs/LICENSE)。
 - 播客 RSS 推荐地址来自 [乔木 AI RSS 的源目录](https://github.com/joeseesun/qiaomu-ai-rss/blob/main/src/data/tidings.json)；第三方源的可用性和全文/音频内容由各发布方决定。
+- 「探索订阅 → 海外播客原文」可搜索 [乔木 Podscribe API](https://api.qiaomu.ai/podscribe/docs) 收录的海外节目，按节目浏览单集并获取完整原文转写。已获取的单集出现在「海外播客原文」频道，可继续翻译、改写或在 AI 伴读中引用。覆盖范围随上游公开目录变化；接口不可用或无转写时会显示错误，不会生成虚构原文。
 - AI 伴读使用 DeepSeek Harness 当前可用的模型与原生会话；模型服务的配置与费用由 Harness 管理。
 
 问题与改进建议请通过 [GitHub Issues](https://github.com/joeseesun/qiaomu-rss-dsh/issues) 提交。本项目采用 [GPL-3.0-only](LICENSE) 许可。

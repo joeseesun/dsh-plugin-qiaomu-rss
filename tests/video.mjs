@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
-import { youtubeEmbedUrl } from '../src/video.js';
+import { articleAudioUrl, articleVideoEmbed, youtubeEmbedUrl } from '../src/video.js';
 const id = 'dQw4w9WgXcQ';
 const expected = `https://www.youtube-nocookie.com/embed/${id}`;
 for (const url of [`https://youtu.be/${id}`,`https://www.youtube.com/watch?v=${id}&t=10`,`https://m.youtube.com/shorts/${id}`,`https://www.youtube.com/live/${id}`]) assert.equal(youtubeEmbedUrl(url),expected);
 for (const url of ['javascript:alert(1)','https://youtube.com.evil.org/watch?v='+id,'https://evil.org/'+id,'https://user:pass@youtube.com/watch?v='+id,'https://youtu.be/invalid','https://youtube.com/embed/'+id+'/extra',undefined]) assert.equal(youtubeEmbedUrl(url),null);
+assert.equal(articleVideoEmbed({ url: `https://www.youtube.com/watch?v=${id}` }), expected);
+assert.equal(articleVideoEmbed({ videoUrl: `https://youtu.be/${id}`, url: 'https://example.com/article' }), expected);
+assert.equal(articleAudioUrl({ audio: 'https://example.com/episode.mp3' }), 'https://example.com/episode.mp3');
+assert.equal(articleAudioUrl({ audio: { url: 'https://example.com/episode.mp3', type: 'audio/mpeg' } }), 'https://example.com/episode.mp3');
+for (const audio of ['javascript:alert(1)', 'http://example.com/a.mp3', 'https://user:pass@example.com/a.mp3']) assert.equal(articleAudioUrl({ audio }), null);
+assert.equal(articleAudioUrl({ audio: { url: 'https://example.com/not-audio.mp4', type: 'video/mp4' } }), null);
 console.log('Video: supported URLs and hostile/invalid URLs passed');

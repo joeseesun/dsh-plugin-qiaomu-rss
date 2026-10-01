@@ -27,6 +27,7 @@ function defaults() {
     qiaomuSources: { fetchedAt: undefined, sources: [] },
     qiaomuStream: { fetchedAt: undefined, entries: [] },
     qiaomuChannels: {},
+    podcastEntries: [],
     articles: {},
     favorites: {},
     read: {},
