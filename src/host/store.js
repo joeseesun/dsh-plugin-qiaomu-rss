@@ -28,6 +28,7 @@ function defaults() {
     qiaomuStream: { fetchedAt: undefined, entries: [] },
     qiaomuChannels: {},
     podcastEntries: [],
+    collection: { enabled: false, accounts: {}, jobs: [] },
     articles: {},
     favorites: {},
     read: {},
@@ -55,7 +56,7 @@ export class RssStore {
       this.data.settings = { ...defaults().settings, ...(parsed.settings ?? {}) };
     } catch (error) {
       if (error?.code !== 'ENOENT') {
-        this.logger?.warn?.('qiaomu-rss: failed to read %s (%s); starting fresh', this.path, String(error));
+        throw new Error('qiaomu-rss: cannot read saved data; refusing to overwrite it', { cause: error });
       }
       this.data = defaults();
     }
@@ -76,7 +77,7 @@ export class RssStore {
       try {
         await mkdir(dirname(this.path), { recursive: true });
         const temp = `${this.path}.${process.pid}.tmp`;
-        await writeFile(temp, JSON.stringify(this.data), 'utf8');
+        await writeFile(temp, JSON.stringify(this.data), { encoding: 'utf8', mode: 0o600 });
         await rename(temp, this.path);
       } catch (error) {
         this.logger?.warn?.('qiaomu-rss: failed to save data: %s', String(error));

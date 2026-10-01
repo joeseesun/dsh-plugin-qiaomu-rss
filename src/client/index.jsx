@@ -41,6 +41,7 @@ const TYPERT_REMOTE = {
     method('searchPodcastShows'),
     method('listPodcastEpisodes'),
     method('importPodcastTranscript'),
+    ...['getCollectionSettings', 'configureCollection', 'submitCollection', 'listCollectionJobs', 'collectionSnapshot', 'acknowledgeCollection', 'openCollectionResult'].map(name => method(name)),
     method('getVersionContent'),
     method('generateVersion'),
     method('refresh'),
@@ -91,6 +92,7 @@ function registerReader(ctx) {
 
   const api = {
     ...nativeChatBridge(ctx),
+    ...Object.fromEntries(['getCollectionSettings', 'configureCollection', 'submitCollection', 'listCollectionJobs', 'collectionSnapshot', 'acknowledgeCollection', 'openCollectionResult'].map(name => [name, params => call(name, params)])),
     prepareChat: (params) => call('prepareChat', params),
     setReadingContext: (params) => call('setReadingContext', params),
     listChannels: () => call('listChannels'),

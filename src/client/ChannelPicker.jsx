@@ -13,8 +13,8 @@ export function groupChannels(channels) {
       sections.聚合.push({ ...channel, subtitle });
     } else if (channel.kind === 'qiaomu') {
       sections.乔木频道.push({ ...channel, subtitle: `${channel.total} 篇文章`, monogram: channel.name.trim().slice(0, 1) });
-    } else if (channel.kind === 'podcast') {
-      sections.聚合.push({ ...channel, subtitle: `${channel.total} 期已获取的原文` });
+    } else if (channel.kind === 'podcast' || channel.kind === 'collection') {
+      sections.聚合.push({ ...channel, subtitle: channel.kind === 'collection' ? `${channel.total} 个申请` : `${channel.total} 期已获取的原文` });
     } else if (channel.key.startsWith('group:')) {
       sections.订阅分组.push({ ...channel, subtitle: `${channels.filter((item) => item.group === channel.name).length} 个订阅源` });
     } else {

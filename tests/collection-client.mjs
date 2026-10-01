@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { JSDOM } from 'jsdom';
+import { collectionCopy, clickedLink } from '../src/client/collection-copy.js';
+const dom = new JSDOM('<article><a href="https://example.org/target"><span>link</span></a><a href="javascript:alert(1)">bad</a></article><a href="https://outside.org">outside</a>');
+const root=dom.window.document.querySelector('article');
+assert.equal(clickedLink({target:root.querySelector('span')},root),'https://example.org/target');
+assert.equal(clickedLink({target:root.querySelectorAll('a')[1]},root),undefined);
+assert.equal(clickedLink({target:dom.window.document.querySelector('body > a')},root),undefined);
+assert.deepEqual(Object.keys(collectionCopy('zh')),Object.keys(collectionCopy('en')));
+console.log('Collection client: exact clicked link, protocol restrictions and matching locale keys passed');
